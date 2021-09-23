@@ -96,7 +96,7 @@ class DAG:
             self._node_in_args[to_node] = {}
         self._node_in_args[to_node][from_node] = arg
 
-    def add_edge(self, from_node: Node, to_node: Node, arg_mapping: Union[int, str]):
+    def add_edge(self, from_node: Node, to_node: Node, arg_mapping: Union[int, str] = 0):
         self.add_node(from_node)
         self.add_node(to_node)
 
