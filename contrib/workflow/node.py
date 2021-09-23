@@ -10,8 +10,7 @@ from ray.workflow.step_function import WorkflowStepFunction
 
 @PublicAPI(stability="beta")
 class Node(metaclass=ABCMeta):
-    """
-    Abstract base class for Node, this provides a Node interface
+    """Abstract base class for Node, this provides a Node interface.
     """
     @abstractmethod
     def get_name(self) -> str:
@@ -24,8 +23,10 @@ class Node(metaclass=ABCMeta):
 
 @PublicAPI(stability="beta")
 class DataNode(Node):
-    """
-    DataNode contains object or ObjectRef
+    """DataNode class.
+
+    DataNode contains only value (either object or ray.ObjectRef),
+    and is typically used as data input for the graph.
     """
     def __init__(self, name, value):
         self._name = name
@@ -40,8 +41,11 @@ class DataNode(Node):
 
 @PublicAPI(stability="beta")
 class FunctionNode:
-    """
-    FunctionNode leverages step function
+    """FunctionNode class.
+
+    FunctionNode leverages workflow's step function to achieve a functional node that
+    involves operation. Input data is passed to the underlying step function while
+    the output of the step function is used as node output.
     """
     def __init__(self,
                  func: Callable,
