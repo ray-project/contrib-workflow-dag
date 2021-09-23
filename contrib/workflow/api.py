@@ -1,15 +1,13 @@
-from typing import Dict, Any, Callable
-
-from ray.workflow.common import get_module, get_qualname
-from ray.workflow.step_function import WorkflowStepFunction
-from contrib.workflow.node import Node
+from typing import Dict, Any
 
 from ray.util.annotations import PublicAPI
+
+from contrib.workflow.node import FunctionNode
 
 
 def make_node_decorator(node_options: Dict[str, Any]):
     def decorator(func):
-        return Node(func, **node_options)
+        return FunctionNode(func, **node_options)
 
     return decorator
 

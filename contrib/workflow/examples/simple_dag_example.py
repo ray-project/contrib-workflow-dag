@@ -1,6 +1,7 @@
-
+import ray
 from ray import workflow
 from contrib import workflow as contrib_workflow
+from contrib.workflow.node import DataNode
 
 from contrib.workflow.dag import DAG
 import shutil
@@ -11,14 +12,13 @@ shutil.rmtree(storage, ignore_errors=True)
 workflow.init(storage)
 
 
-@contrib_workflow.node
-def data_input_1():
-    return 10
+data_input_1 = DataNode("input1", 10)
 
+# data_input_1 = DataNode("input1", ray.put(10))
 
-@contrib_workflow.node
-def data_input_2():
-    return 20
+# data_input_2 = DataNode("input1", 20)
+
+data_input_2 = DataNode("input2", ray.put(20))
 
 
 @contrib_workflow.node
@@ -62,4 +62,3 @@ graph.add_edge(minus, multiply, "a")
 graph.add_edge(data_input_3, multiply, "b")
 
 assert -300 == graph.execute()
-

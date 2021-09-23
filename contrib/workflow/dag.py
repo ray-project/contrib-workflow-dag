@@ -1,3 +1,5 @@
+import ray
+from ray import ObjectRef
 from typing import Union
 
 from contrib.workflow.node import Node
@@ -76,7 +78,7 @@ class DAG:
         assert args_pos == list(range(len(args_pos_and_val))), \
             "Node {} has incorrect incoming positional args: {}".format(node.get_name(), args_pos)
         args = [arg[1] for arg in args_pos_and_val]
-        result = node.step(*args, **kwargs)
+        result = node.execute(*args, **kwargs)
         self._node_output[node] = result
         return result
 
@@ -171,7 +173,7 @@ class DAG:
         self._compute_node_levels()
         return self._node_levels[node]
 
-    def compute_max_level(self):
+    def get_max_level(self):
         levels = self._compute_node_levels()
         max_level = 0
         for node, node_level in levels.items():
@@ -225,3 +227,6 @@ class DAG:
 
     def get_node(self, node_name: str) -> Node:
         return self._nodes[node_name]
+
+    def get_node_output(self, node: Node):
+        return self._node_output[node]

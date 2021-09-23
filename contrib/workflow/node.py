@@ -1,15 +1,50 @@
-from typing import Dict, Any, Callable
+from abc import ABCMeta, abstractmethod
+from typing import Any, Callable
+from typing import Union
 
-from ray.workflow.common import get_module, get_qualname
-from ray.workflow.step_function import WorkflowStepFunction
-
+import ray
+from ray import ObjectRef
 from ray.util.annotations import PublicAPI
+from ray.workflow.common import get_module, get_qualname, Workflow
+from ray.workflow.step_function import WorkflowStepFunction
 
 
 @PublicAPI(stability="beta")
-class Node:
+class Node(metaclass=ABCMeta):
     """
-    Node class
+    Abstract base class for Node, this provides a Node interface
+    """
+    @abstractmethod
+    def get_name(self) -> str:
+        """Get name of the node"""
+
+    @abstractmethod
+    def execute(self, *args, **kwargs) -> Union[Workflow, ObjectRef, Any]:
+        """A lazy-evaluation callable"""
+
+
+@PublicAPI(stability="beta")
+class DataNode(Node):
+    """
+    DataNode contains object or ObjectRef
+    """
+    def __init__(self, name, value):
+        self._name = name
+        self._value = value
+
+    def get_name(self):
+        return self._name
+
+    def execute(self):
+        # TODO: here we materialize ObjectRef as ObjectRef alone cannot be passed to workflow step
+        # TODO: it might be better to add the support on workflow layer, or rely on func body to materialize it
+        return ray.get(self._value) if isinstance(self._value, ObjectRef) else self._value
+
+
+@PublicAPI(stability="beta")
+class FunctionNode:
+    """
+    FunctionNode leverages step function
     """
     def __init__(self,
                  func: Callable,
@@ -24,7 +59,7 @@ class Node:
 
         self._step_func = WorkflowStepFunction(self._func, **self._step_options)
 
-        self.step = self._step_func.step
+        self.execute = self._step_func.step
 
     def options(self,
                 name=None,
@@ -40,7 +75,7 @@ class Node:
         Returns:
             The node itself.
         """
-        return Node(self._func, name, step_options)
+        return FunctionNode(self._func, name, step_options)
 
     def __call__(self, *args, **kwargs):
         raise TypeError("Workflow nodes cannot be called directly")
