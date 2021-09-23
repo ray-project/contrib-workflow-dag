@@ -4,6 +4,7 @@ from contrib import workflow as contrib_workflow
 from contrib.workflow.node import DataNode
 from contrib.workflow.dag import DAG
 import shutil
+from enum import Enum
 
 import sys
 import inspect
@@ -32,6 +33,11 @@ shutil.rmtree(storage, ignore_errors=True)
 
 workflow.init()
 
+class ExecutionType(Enum):
+    FIT = 0,
+    PREDICT = 1,
+    SCORE = 2
+
 class DAGNode:
     def __init__(self):
         self.createdTime = datetime.now()
@@ -58,39 +64,50 @@ class MLNode(DAGNode):
             self.estimator = estimator
 
     def fit(self, inputtuple):
-        (X, y, fit)= inputtuple
+        (X, y, mode)= inputtuple
         try:
             # avoid refit if a workflow is resumed
             if check_is_fitted(self.estimator):
-                return X, y, fit
+                return X, y, mode
         except NotFittedError:
             pass
         if base.is_classifier(self.estimator) or base.is_regressor(self.estimator):
             self.estimator.fit(X, y)
-            return X, y, fit
+            return X, y, mode
         else:
             X = self.estimator.fit_transform(X)
-            return X, y, fit
+            return X, y, mode
 
     def predict(self, inputtuple):
-        (X, y, fit) = inputtuple
+        (X, y, mode) = inputtuple
         if base.is_classifier(self.estimator) or base.is_regressor(self.estimator):
             pred_y = self.estimator.predict(X)
-            return X, pred_y, fit
+            return X, pred_y, mode
         else:
             X = self.estimator.transform(X)
-            return X, y, fit
+            return X, y, mode
+            
+    def score(self, inputtuple):
+        (X, y, mode) = inputtuple
+        if base.is_classifier(self.estimator) or base.is_regressor(self.estimator):
+            score = self.estimator.score(X, y)
+            return X, score, mode
+        else:
+            X = self.estimator.transform(X)
+            return X, y, mode
 
     @ray.workflow.virtual_actor.readonly
     def get_model(self):
         return self.estimator
 
     def run_workflow_step(self, inputtuple):
-        (X, y, fit) = inputtuple
-        if fit:
+        (X, y, mode) = inputtuple
+        if mode == ExecutionType.FIT:
             return self.fit(inputtuple)
-        else:
+        elif mode == ExecutionType.PREDICT:
             return self.predict(inputtuple)
+        elif mode == ExecutionType.SCORE:
+            return self.score(inputtuple)
 
     def __getstate__(self):
         return self.estimator
@@ -135,19 +152,19 @@ def node_lf(inputtuple):
     return simplenode(inputtuple, "node_l")
 
 graph = DAG()
-pipeline_input_fit = (X_train, y_train, True)
+pipeline_input_fit = (X_train, y_train, ExecutionType.FIT)
 data_input_fit = DataNode("input_fit", pipeline_input_fit)
 graph.add_edge(data_input_fit, node_jf, 0)
 graph.add_edge(node_jf, node_kf, 0)
 graph.add_edge(node_kf, node_lf, 0)
 (X_out, y_out, fit) = graph.execute()
-print(X_out.shape, y_out.shape, fit)
+print("\n\n output after FIT: ", X_out.shape, y_out.shape, fit)
 
 graph.reset()
-pipeline_input_predict = (X_test, y_test, False)
+pipeline_input_predict = (X_test, y_test, ExecutionType.PREDICT)
 data_input_predict = DataNode("input_predict", pipeline_input_predict)
 graph.add_edge(data_input_predict, node_jf, 0)
 graph.add_edge(node_jf, node_kf, 0)
 graph.add_edge(node_kf, node_lf, 0)
 (X_out, y_out, predict) = graph.execute()
-print(X_out.shape, y_out.shape, predict)
+print("\n\n output after PREDICT: ", X_out.shape, y_out.shape, predict)
