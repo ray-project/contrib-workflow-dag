@@ -124,6 +124,7 @@ node_j = MLNode.get_or_create("node_j", preprocessor)
 node_k = MLNode.get_or_create("node_k", MinMaxScaler())
 node_l = MLNode.get_or_create("node_l", DecisionTreeClassifier(max_depth=3))
 
+'''
 @contrib_workflow.node
 def node_jf(inputtuple):
     return simplenode(inputtuple, "node_j")
@@ -133,6 +134,12 @@ def node_kf(inputtuple):
 @contrib_workflow.node
 def node_lf(inputtuple):
     return simplenode(inputtuple, "node_l")
+'''
+
+func_string = '@contrib_workflow.node\ndef xxxx(inputtuple):\n\treturn simplenode(inputtuple, "yyyy")\n'
+for nodename in ["node_j", "node_k", "node_l"]:
+    declare_func = func_string.replace('xxxx',nodename+'f').replace('yyyy',nodename)
+    exec(declare_func)
 
 graph = DAG()
 pipeline_input_fit = (X_train, y_train, True)
