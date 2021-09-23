@@ -11,16 +11,14 @@ storage = "workflow_data"
 shutil.rmtree(storage, ignore_errors=True)
 workflow.init(storage)
 
-
+# input with DataNode using object
 data_input_1 = DataNode("input1", 10)
 
-# data_input_1 = DataNode("input1", ray.put(10))
-
-# data_input_2 = DataNode("input1", 20)
-
+# input with DataNode using ObjectRef
 data_input_2 = DataNode("input2", ray.put(20))
 
 
+# input with FunctionNode
 @contrib_workflow.node
 def data_input_3():
     return 30
@@ -53,7 +51,6 @@ graph.add_edge(minus, multiply, 0)
 graph.add_edge(data_input_3, multiply, 1)
 
 assert -300 == graph.execute()
-
 
 graph.reset()
 graph.add_edge(data_input_1, minus, "left")

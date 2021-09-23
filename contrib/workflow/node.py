@@ -2,7 +2,6 @@ from abc import ABCMeta, abstractmethod
 from typing import Any, Callable
 from typing import Union
 
-import ray
 from ray import ObjectRef
 from ray.util.annotations import PublicAPI
 from ray.workflow.common import get_module, get_qualname, Workflow
@@ -36,9 +35,7 @@ class DataNode(Node):
         return self._name
 
     def execute(self):
-        # TODO: here we materialize ObjectRef as ObjectRef alone cannot be passed to workflow step
-        # TODO: it might be better to add the support on workflow layer, or rely on func body to materialize it
-        return ray.get(self._value) if isinstance(self._value, ObjectRef) else self._value
+        return self._value
 
 
 @PublicAPI(stability="beta")
