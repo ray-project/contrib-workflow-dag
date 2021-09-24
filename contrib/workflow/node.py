@@ -40,11 +40,11 @@ class DataNode(Node):
 
 
 @PublicAPI(stability="beta")
-class FunctionNode:
+class FunctionNode(Node):
     """FunctionNode class.
 
-    FunctionNode leverages workflow's step function to achieve a functional node that
-    involves operation. Input data is passed to the underlying step function while
+    FunctionNode leverages workflow's step function to achieve a functional node.
+    Input data is passed to the underlying step function while
     the output of the step function is used as node output.
     """
     def __init__(self,
@@ -60,7 +60,11 @@ class FunctionNode:
 
         self._step_func = WorkflowStepFunction(self._func, **self._step_options)
 
-        self.execute = self._step_func.step
+    def get_name(self):
+        return self._name
+
+    def execute(self, *args, **kwargs):
+        return self._step_func.step(*args, **kwargs)
 
     def options(self,
                 name=None,
@@ -81,6 +85,27 @@ class FunctionNode:
     def __call__(self, *args, **kwargs):
         raise TypeError("Workflow nodes cannot be called directly")
 
+
+@PublicAPI(stability="beta")
+class StepFunctionNode(Node):
+    """StepFunctionNode class.
+
+    StepFunctionNode leverages workflow's step function to achieve a functional node.
+    Input data is passed to the underlying step function while
+    the output of the step function is used as node output.
+    """
+    def __init__(self,
+                 step_func: WorkflowStepFunction,
+                 name=None):
+
+        self._step_func = step_func
+        self._name = name or self._step_func.step.__name__
+
     def get_name(self):
         return self._name
 
+    def execute(self, *args, **kwargs):
+        return self._step_func.step(*args, **kwargs)
+
+    def __call__(self, *args, **kwargs):
+        raise TypeError("Workflow nodes cannot be called directly")
