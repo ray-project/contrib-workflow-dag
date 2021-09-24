@@ -14,7 +14,7 @@ def make_node_decorator(node_options: Dict[str, Any]):
 
 @PublicAPI(stability="beta")
 def node(*args, **kwargs):
-    """A decorator used for creating workflow steps.
+    """A decorator used for creating workflow nodes.
     """
     if len(args) == 1 and len(kwargs) == 0 and callable(args[0]):
         return make_node_decorator({})(args[0])

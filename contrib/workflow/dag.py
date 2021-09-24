@@ -1,16 +1,13 @@
-import ray
-from ray import ObjectRef
 from typing import Union
 
-from contrib.workflow.node import Node
-
 from ray.util.annotations import PublicAPI
+
+from contrib.workflow.node import Node
 
 
 @PublicAPI(stability="beta")
 class DAG:
-    """
-    DAG class
+    """DAG class.
     """
     def __init__(self):
         self._nodes = {}
@@ -44,6 +41,40 @@ class DAG:
         self._level_nodes = {}
 
     def execute(self, node=None):
+        """Execute the graph, optionally on a target node.
+
+        If node is not None, it will execute on the target node only,
+        i.e. all pre-nodes relate to the target node will be executed
+        while non-related nodes will not be executed.
+        If node is None, it will execute on the last node in the output
+        layer. TODO: what would be a better default behavior?
+
+        Example:
+            >>> data_input_1 = DataNode("input1", 10)
+            >>> data_input_2 = DataNode("input2", 20)
+            >>> data_input_3 = DataNode("input3", 30)
+
+            >>> @workflow.node
+            ... def minus(left: int, right: int) -> int:
+            ...     left - right
+
+            >>> @workflow.node
+            ... def multiply(a: int, b: int) -> int:
+            ...     return a * b
+
+            >>> graph = DAG()
+            >>> graph.add_edge(data_input_1, minus, 0)
+            >>> graph.add_edge(data_input_2, minus, 1)
+            >>> graph.add_edge(minus, multiply, 0)
+            >>> graph.add_edge(data_input_3, multiply, 1)
+            >>> result = graph.execute()
+
+        Args:
+            node: Target node to execute on.
+
+        Returns:
+
+        """
         return self._execute(node)
 
     def _execute(self, node=None):
@@ -96,7 +127,65 @@ class DAG:
             self._node_in_args[to_node] = {}
         self._node_in_args[to_node][from_node] = arg
 
+    @classmethod
+    def sequential(cls, nodes):
+        dag = DAG()
+        for i in range(len(nodes) - 1):
+            dag.add_edge(nodes[i], nodes[i+1])
+        return dag
+
     def add_edge(self, from_node: Node, to_node: Node, arg_mapping: Union[int, str] = 0):
+        """Adds an edge to the graph.
+
+        This adds an edge from from_node to to_node, with from_node and to_node added
+        to the graph as well if they don't exist.
+        The output of from_node will be used as part of the input for to_node, with
+        arg_mapping as argument identifier. arg_mapping can be either positional (int)
+        or kwargs (str). For example: add_edge(node1, node2, 0)
+        means the output of node2 will become the first argument of node1's input;
+        add_edge(node3, node4, 3) means the output of node3 will become the 4th
+        positional argument of node4's input; and add_edge(node5, node6, "a")
+        means the output of node5 will become the kwarg "a" of node6's input.
+
+        Example:
+            >>> data_input_1 = DataNode("input1", 10)
+            >>> data_input_2 = DataNode("input2", 20)
+            >>> data_input_3 = DataNode("input3", 30)
+
+            >>> @workflow.node
+            ... def minus(left: int, right: int) -> int:
+            ...     left - right
+
+            >>> @workflow.node
+            ... def multiply(a: int, b: int) -> int:
+            ...     return a * b
+
+            >>> # Use positional args
+            >>> graph = DAG()
+            >>> graph.add_edge(data_input_1, minus, 0)
+            >>> graph.add_edge(data_input_2, minus, 1)
+            >>> graph.add_edge(minus, multiply, 0)
+            >>> graph.add_edge(data_input_3, multiply, 1)
+            >>> result = graph.execute()
+
+            >>> # Use kwargs
+            >>> graph = DAG()
+            >>> graph.add_edge(data_input_1, minus, "left")
+            >>> graph.add_edge(data_input_2, minus, "right")
+            >>> graph.add_edge(minus, multiply, "a")
+            >>> graph.add_edge(data_input_3, multiply, "b")
+            >>> result = graph.execute()
+
+
+        Args:
+            from_node: In node.
+            to_node: Out node.
+            arg_mapping: The input argument for to_node when using output from from_node.
+            It can be either positional (int) or kwargs (str). default is 0.
+
+        Returns:
+
+        """
         self.add_node(from_node)
         self.add_node(to_node)
 
@@ -193,9 +282,11 @@ class DAG:
         return self._level_nodes
 
     def get_post_nodes(self, node: Node):
+        """Get all nodes that flows out from the target node, i.e. downstream nodes"""
         return self._downstreams[node]
 
     def get_pre_nodes(self, node: Node):
+        """Get all nodes that flows into the target node, i.e. upstream dependencies"""
         return self._upstreams[node]
 
     def is_output(self, node: Node):

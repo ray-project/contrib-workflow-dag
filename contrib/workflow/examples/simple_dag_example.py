@@ -50,7 +50,7 @@ graph.add_edge(data_input_2, minus, 1)
 graph.add_edge(minus, multiply, 0)
 graph.add_edge(data_input_3, multiply, 1)
 
-assert -300 == graph.execute()
+print(graph.execute())
 
 graph.reset()
 graph.add_edge(data_input_1, minus, "left")
@@ -58,4 +58,4 @@ graph.add_edge(data_input_2, minus, "right")
 graph.add_edge(minus, multiply, "a")
 graph.add_edge(data_input_3, multiply, "b")
 
-assert -300 == graph.execute()
+print(graph.execute())

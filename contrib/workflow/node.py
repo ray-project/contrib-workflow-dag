@@ -10,8 +10,7 @@ from ray.workflow.step_function import WorkflowStepFunction
 
 @PublicAPI(stability="beta")
 class Node(metaclass=ABCMeta):
-    """
-    Abstract base class for Node, this provides a Node interface
+    """Abstract base class for Node, this provides a Node interface.
     """
     @abstractmethod
     def get_name(self) -> str:
@@ -24,8 +23,10 @@ class Node(metaclass=ABCMeta):
 
 @PublicAPI(stability="beta")
 class DataNode(Node):
-    """
-    DataNode contains object or ObjectRef
+    """DataNode class.
+
+    DataNode contains only value (either object or ray.ObjectRef),
+    and is typically used as data input for the graph.
     """
     def __init__(self, name, value):
         self._name = name
@@ -39,9 +40,12 @@ class DataNode(Node):
 
 
 @PublicAPI(stability="beta")
-class FunctionNode:
-    """
-    FunctionNode leverages step function
+class FunctionNode(Node):
+    """FunctionNode class.
+
+    FunctionNode leverages workflow's step function to achieve a functional node.
+    Input data is passed to the underlying step function while
+    the output of the step function is used as node output.
     """
     def __init__(self,
                  func: Callable,
@@ -56,7 +60,11 @@ class FunctionNode:
 
         self._step_func = WorkflowStepFunction(self._func, **self._step_options)
 
-        self.execute = self._step_func.step
+    def get_name(self):
+        return self._name
+
+    def execute(self, *args, **kwargs):
+        return self._step_func.step(*args, **kwargs)
 
     def options(self,
                 name=None,
@@ -77,6 +85,27 @@ class FunctionNode:
     def __call__(self, *args, **kwargs):
         raise TypeError("Workflow nodes cannot be called directly")
 
+
+@PublicAPI(stability="beta")
+class StepFunctionNode(Node):
+    """StepFunctionNode class.
+
+    StepFunctionNode leverages workflow's step function to achieve a functional node.
+    Input data is passed to the underlying step function while
+    the output of the step function is used as node output.
+    """
+    def __init__(self,
+                 step_func: WorkflowStepFunction,
+                 name=None):
+
+        self._step_func = step_func
+        self._name = name or self._step_func.step.__name__
+
     def get_name(self):
         return self._name
 
+    def execute(self, *args, **kwargs):
+        return self._step_func.step(*args, **kwargs)
+
+    def __call__(self, *args, **kwargs):
+        raise TypeError("Workflow nodes cannot be called directly")
