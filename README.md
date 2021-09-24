@@ -10,15 +10,17 @@ aiming to provide convenience on workflow construction.
 ## Comparison
 
 TODO: discuss with Yi/Zhe/Alex to find a good example
-for quick comparison. e.g. `c.step(b.step(a.step())).run` vs 
-`DAG.sequential([a, b, c]).execute()`.  Try to find a 
-multi-branch graph that could benefit from the convenience
+for quick comparison.   
+e.g. `c.step(b.step(a.step())).run` vs 
+`DAG.sequential([a, b, c]).execute()`.  
+Try to find a multi-branch graph that could benefit from the convenience
 of DAG where workflow.step can be very nested and hard-to-read.
 
 ## Design
-A ***DAG*** contains a set of _**connected Nodes**_, and is typically constructed by
-`dag.add_edge(from_node, to_node, in_arg_mapping)`.
+A ***DAG*** contains a set of _**connected Nodes**_.
 
+A DAG is typically constructed by
+`dag.add_edge(from_node, to_node, in_arg_mapping)`.  
 `add_edge` adds both Nodes and the connecting edge to the graph, while
 `in_arg_mapping` controls how the data stream flows. For example,
 `dag.add_edge(A, B, 0)` means adding "Node A -> Node B" to the graph 
@@ -33,7 +35,7 @@ the given node.
 
 ## Tutorial
 Refer to [examples](https://github.com/ray-project/contrib-workflow-dag/tree/main/contrib/workflow/examples) for now.  
-Work with AnyScale team on formulating a tutorial.
+TODO: Work with AnyScale team on formulating a tutorial.
 
 
 ## Open Discussions
@@ -52,7 +54,8 @@ as complex as dag.execute(node, input={nodeA: {a: val1, b: val2, ...}, nodeB:{c:
 For example, with a data stream from DB connection, one can simply
 subclass DataNode and create a new DBNode which can build the db connection
 and deliver data.
-   3. DataNode is there is many/most graph-based models, e.g. SPSS Modeler.
+   3. DataNode is there is many/most graph-based models, e.g. SPSS Modeler.  
+
 A DataNode can ultimately be used as a placeholder which defines
 the intput type, how it is connected to the functional nodes and etc.
    
