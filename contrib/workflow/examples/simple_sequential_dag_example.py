@@ -33,5 +33,5 @@ def factorial(n):
 
 factorial_node = StepFunctionNode(factorial)
 
-dag = DAG.sequential([data_input, minus_1, factorial_node])
-print(dag.execute())
+graph = DAG.sequential([data_input, minus_1, factorial_node])
+print(graph.execute())
