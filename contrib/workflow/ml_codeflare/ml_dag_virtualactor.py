@@ -65,12 +65,6 @@ class MLNode(DAGNode):
 
     def fit(self, inputtuple):
         (X, y, mode)= inputtuple
-        try:
-            # avoid refit if a workflow is resumed
-            if check_is_fitted(self.estimator):
-                return X, y, mode
-        except NotFittedError:
-            pass
         if base.is_classifier(self.estimator) or base.is_regressor(self.estimator):
             self.estimator.fit(X, y)
             return X, y, mode
