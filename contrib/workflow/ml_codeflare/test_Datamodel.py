@@ -52,7 +52,6 @@ preprocessor = ColumnTransformer(
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
 pipeline = dm.Pipeline()
-
 node_a = dm.EstimatorNode('preprocess', preprocessor).get_node()
 node_b = dm.EstimatorNode('minmaxscaler', MinMaxScaler()).get_node()
 node_c = dm.EstimatorNode('decisiontree', DecisionTreeClassifier(max_depth=3)).get_node()
@@ -63,5 +62,14 @@ pipeline.add_edge(data_input_fit, node_a)
 pipeline.add_edge(node_a, node_b)
 pipeline.add_edge(node_b, node_c)
 (X_out, y_out, fit) = pipeline.execute_pipeline()
-
 print("\n\n output after FIT: ", X_out.shape, y_out.shape, fit)
+del pipeline
+
+reactivated_pipeline = dm.Pipeline()
+pipeline_input_predict = (X_test, y_test, ExecutionType.PREDICT)
+data_input_predict = DataNode("input_predict", pipeline_input_predict)
+reactivated_pipeline.add_edge(data_input_predict, node_a)
+reactivated_pipeline.add_edge(node_a, node_b)
+reactivated_pipeline.add_edge(node_b, node_c)
+(X_out, y_out, predict) = reactivated_pipeline.execute_pipeline()
+print("\n\n output after PREDICT: ", X_out.shape, y_out.shape, fit)
