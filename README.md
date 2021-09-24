@@ -9,8 +9,8 @@ aiming to provide convenience on workflow construction.
 
 ## Comparison
 
-TODO: discuss with Yi/Zhe/Alex to find a good example
-for quick comparison.   
+**_TODO: discuss with Yi/Zhe/Alex to find a good example
+for comparison._**   
 e.g. `c.step(b.step(a.step())).run` vs 
 `DAG.sequential([a, b, c]).execute()`.  
 Try to find a multi-branch graph that could benefit from the convenience
@@ -54,8 +54,7 @@ as complex as dag.execute(node, input={nodeA: {a: val1, b: val2, ...}, nodeB:{c:
 For example, with a data stream from DB connection, one can simply
 subclass DataNode and create a new DBNode which can build the db connection
 and deliver data.
-   3. DataNode is there is many/most graph-based models, e.g. SPSS Modeler.  
-
-A DataNode can ultimately be used as a placeholder which defines
+   3. DataNode is there is many/most graph-based models, e.g. SPSS Modeler.    
+   A DataNode can ultimately be used as a placeholder which defines
 the intput type, how it is connected to the functional nodes and etc.
    
