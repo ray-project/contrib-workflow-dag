@@ -127,6 +127,13 @@ class DAG:
             self._node_in_args[to_node] = {}
         self._node_in_args[to_node][from_node] = arg
 
+    @classmethod
+    def sequential(cls, nodes):
+        dag = DAG()
+        for i in range(len(nodes) - 1):
+            dag.add_edge(nodes[i], nodes[i+1])
+        return dag
+
     def add_edge(self, from_node: Node, to_node: Node, arg_mapping: Union[int, str] = 0):
         """Adds an edge to the graph.
 
