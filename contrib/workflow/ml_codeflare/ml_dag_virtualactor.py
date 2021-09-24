@@ -86,7 +86,7 @@ class MLNode(DAGNode):
         else:
             X = self.estimator.transform(X)
             return X, y, mode
-            
+
     def score(self, inputtuple):
         (X, y, mode) = inputtuple
         if base.is_classifier(self.estimator) or base.is_regressor(self.estimator):
@@ -96,7 +96,6 @@ class MLNode(DAGNode):
             X = self.estimator.transform(X)
             return X, y, mode
 
-    @ray.workflow.virtual_actor.readonly
     def get_model(self):
         return self.estimator
 
@@ -153,10 +152,12 @@ def node_lf(inputtuple):
     return simplenode(inputtuple, "node_l")
 '''
 
-func_string = '@contrib_workflow.node\ndef xxxx(inputtuple):\n\treturn simplenode(inputtuple, "yyyy")\n'
+func_dict = {}
+func_string = '@contrib_workflow.node\ndef xxxx(inputtuple):\n\treturn simplenode(inputtuple, "yyyy")\nfunc_dict["yyyy"]=xxxx\n'
 for nodename in ["node_j", "node_k", "node_l"]:
-    declare_func = func_string.replace('xxxx',nodename+'f').replace('yyyy',nodename)
+    declare_func = func_string.replace('xxxx',nodename+'f',2).replace('yyyy',nodename,2)
     exec(declare_func)
+print(type(func_dict["node_j"]))
 
 graph = DAG()
 pipeline_input_fit = (X_train, y_train, ExecutionType.FIT)
@@ -175,3 +176,7 @@ graph.add_edge(node_jf, node_kf, 0)
 graph.add_edge(node_kf, node_lf, 0)
 (X_out, y_out, predict) = graph.execute()
 print("\n\n output after PREDICT: ", X_out.shape, y_out.shape, predict)
+
+nodek_actor = workflow.get_actor("node_k")
+scaler = nodek_actor.get_model.run_async()
+print(type(ray.get(scaler)))
