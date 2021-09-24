@@ -19,6 +19,15 @@ class ExecutionType(Enum):
     SCORE = 2
 
 @ray.workflow.virtual_actor
+class PersistedDAG():
+    def __init__(self, dag):
+        self.__dag = dag
+    def __getstate__(self):
+        return self.__dag
+    def __setstate__(self, dag):
+        self.__dag = dag
+
+@ray.workflow.virtual_actor
 class MLNode():
     def __init__(self, estimator):
         self.__createdTime = datetime.now()
@@ -29,6 +38,12 @@ class MLNode():
 
     def fit(self, inputtuple):
         (X, y, mode)= inputtuple
+        try:
+            # avoid refit if a workflow is resumed
+            if check_is_fitted(self.estimator):
+                return X, y, mode
+        except NotFittedError:
+            pass
         if base.is_classifier(self.estimator) or base.is_regressor(self.estimator):
             self.estimator.fit(X, y)
             return X, y, mode
@@ -92,10 +107,11 @@ class EstimatorNode():
 
 class Pipeline:
     def __init__(self, id=None):
-        if id is not None:
-            self.__id = id
         self.__dag = DAG()
         self.__fanin = {}
+        self.__id = None
+        if id is not None:
+            self.__id = id
     def __str__(self):
         return self.__id__
     def add_edge(self, from_node, to_node):
@@ -105,4 +121,7 @@ class Pipeline:
             self.__fanin[to_node] = 0
         self.__dag.add_edge(from_node,to_node,self.__fanin[to_node])
     def execute_pipeline(self):
-        return self.__dag.execute()
+        results = self.__dag.execute()
+        if self.__id is not None:
+            self.__persisteddag = PersistedDAG.get_or_create(self.__id, self.__dag)
+        return results
