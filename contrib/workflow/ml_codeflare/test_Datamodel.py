@@ -51,7 +51,7 @@ preprocessor = ColumnTransformer(
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
-pipeline = dm.Pipeline()
+pipeline = dm.Pipeline('run_'+datetime.now().strftime("%Y-%m-%d_%H:%M"))
 node_a = dm.EstimatorNode('preprocess', preprocessor).get_node()
 node_b = dm.EstimatorNode('minmaxscaler', MinMaxScaler()).get_node()
 node_c = dm.EstimatorNode('decisiontree', DecisionTreeClassifier(max_depth=3)).get_node()
