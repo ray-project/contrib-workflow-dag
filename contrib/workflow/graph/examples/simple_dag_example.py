@@ -1,9 +1,9 @@
 import ray
 from ray import workflow
 from contrib import workflow as contrib_workflow
-from contrib.workflow.node import DataNode
+from contrib.workflow.graph.node import DataNode
 
-from contrib.workflow.dag import DAG
+from contrib.workflow.graph.dag import DAG
 import shutil
 
 
@@ -19,17 +19,17 @@ data_input_2 = DataNode("input2", ray.put(20))
 
 
 # input with FunctionNode
-@contrib_workflow.node
+@contrib_workflow.graph.node
 def data_input_3():
     return 30
 
 
-@contrib_workflow.node
+@contrib_workflow.graph.node
 def minus(left: int, right: int) -> int:
     return left - right
 
 
-@contrib_workflow.node
+@contrib_workflow.graph.node
 def multiply(a: int, b: int) -> int:
     return a * b
 

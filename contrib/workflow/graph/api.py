@@ -2,7 +2,7 @@ from typing import Dict, Any
 
 from ray.util.annotations import PublicAPI
 
-from contrib.workflow.node import FunctionNode
+from contrib.workflow.graph.node import FunctionNode
 
 
 def make_node_decorator(node_options: Dict[str, Any]):
@@ -12,7 +12,7 @@ def make_node_decorator(node_options: Dict[str, Any]):
     return decorator
 
 
-@PublicAPI(stability="alpha")
+# @PublicAPI(stability="alpha")
 def node(*args, **kwargs):
     """A decorator used for creating workflow nodes.
     """

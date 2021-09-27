@@ -2,10 +2,10 @@ from typing import Union
 
 from ray.util.annotations import PublicAPI
 
-from contrib.workflow.node import Node
+from contrib.workflow.graph.node import Node
 
 
-@PublicAPI(stability="alpha")
+# @PublicAPI(stability="alpha")
 class DAG:
     """DAG class.
     """
