@@ -38,25 +38,10 @@ class ExecutionType(Enum):
     PREDICT = 1,
     SCORE = 2
 
-class DAGNode:
-    def __init__(self):
-        self.createdTime = datetime.now()
-        self.lastInvokedAt = datetime.now()
-    def setUpstreamNodes(self, dagnodes):
-        self.upstream = dagnodes
-    def getUpstreamNodes(self):
-        return self.upstream
-    def setDownstreamNodes(self, dagnodes):
-        self.downstream = dagnodes
-    def getDownstreamNodes(self):
-        return self.downstream
-    def __getstate__(self):
-        pass
-    def __setstate__(self):
-        pass
+
 
 @ray.workflow.virtual_actor
-class MLNode(DAGNode):
+class MLNode():
     def __init__(self, estimator):
         super().__init__()
         #self.node_id = node_id
