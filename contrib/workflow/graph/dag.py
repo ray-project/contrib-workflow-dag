@@ -19,19 +19,6 @@ class DAG:
         self._node_output = {}
         self._node_in_args = {}
 
-    def reset(self):
-        self._reset()
-
-    def _reset(self):
-        self._nodes = {}
-        self._edges = []
-        self._upstreams = {}
-        self._downstreams = {}
-        self._node_levels = {}
-        self._level_nodes = {}
-        self._node_output = {}
-        self._node_in_args = {}
-
     def _reset_levels(self):
         """
         Graph is mutable, so when graph is muted (e.g. adding a new node),
