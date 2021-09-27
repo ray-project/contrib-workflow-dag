@@ -96,7 +96,7 @@ class EstimatorNode():
         func_string = '@contrib.workflow.node\ndef xxxx(inputtuple):\n\treturn simplenode(inputtuple, "yyyy")\nfunc_dict["yyyy"]=xxxx\n'
         declare_func = func_string.replace('xxxx',self.__node_name+'f',2).replace('yyyy',self.__node_name,2)
         exec(declare_func)
-        print(func_dict[self.__node_name])
+        # print(func_dict[self.__node_name])
         return func_dict[self.__node_name]
 
 class Pipeline:
@@ -119,3 +119,9 @@ class Pipeline:
         if self.__id is not None:
             self.__persisteddag = PersistedDAG.get_or_create(self.__id, self.__dag)
         return results
+    def return_pipeline(self):
+        if self.__id is not None:
+            self.__persisteddag = PersistedDAG.get_or_create(self.__id, self.__dag)
+            return self.__persisteddag
+        else:
+            raise AttributeError('Current pipeline was not saved')
