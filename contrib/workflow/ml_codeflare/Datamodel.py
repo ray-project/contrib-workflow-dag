@@ -4,6 +4,7 @@ import contrib
 from contrib import workflow as contrib_workflow
 from contrib.workflow.node import DataNode
 from contrib.workflow.dag import DAG
+from contrib.workflow.ml_codeflare.Exceptions import *
 
 from abc import ABC, abstractmethod
 from enum import Enum
@@ -124,4 +125,4 @@ class Pipeline:
             self.__persisteddag = PersistedDAG.get_or_create(self.__id, self.__dag)
             return self.__persisteddag
         else:
-            raise AttributeError('Current pipeline was not saved')
+            raise PipelineException('Current pipeline was not saved')
