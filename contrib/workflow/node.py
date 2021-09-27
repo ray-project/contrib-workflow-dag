@@ -8,7 +8,7 @@ from ray.workflow.common import get_module, get_qualname, Workflow
 from ray.workflow.step_function import WorkflowStepFunction
 
 
-@PublicAPI(stability="beta")
+@PublicAPI(stability="alpha")
 class Node(metaclass=ABCMeta):
     """Abstract base class for Node, this provides a Node interface.
     """
@@ -21,7 +21,7 @@ class Node(metaclass=ABCMeta):
         """A lazy-evaluation callable"""
 
 
-@PublicAPI(stability="beta")
+@PublicAPI(stability="alpha")
 class DataNode(Node):
     """DataNode class.
 
@@ -39,7 +39,7 @@ class DataNode(Node):
         return self._value
 
 
-@PublicAPI(stability="beta")
+@PublicAPI(stability="alpha")
 class FunctionNode(Node):
     """FunctionNode class.
 
@@ -86,7 +86,7 @@ class FunctionNode(Node):
         raise TypeError("Workflow nodes cannot be called directly")
 
 
-@PublicAPI(stability="beta")
+@PublicAPI(stability="alpha")
 class StepFunctionNode(Node):
     """StepFunctionNode class.
 

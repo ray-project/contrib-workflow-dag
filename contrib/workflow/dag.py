@@ -5,7 +5,7 @@ from ray.util.annotations import PublicAPI
 from contrib.workflow.node import Node
 
 
-@PublicAPI(stability="beta")
+@PublicAPI(stability="alpha")
 class DAG:
     """DAG class.
     """
