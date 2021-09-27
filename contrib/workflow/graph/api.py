@@ -12,7 +12,7 @@ def make_node_decorator(node_options: Dict[str, Any]):
     return decorator
 
 
-# @PublicAPI(stability="alpha")
+@PublicAPI(stability="beta")
 def node(*args, **kwargs):
     """A decorator used for creating workflow nodes.
     """
