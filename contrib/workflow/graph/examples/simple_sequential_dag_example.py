@@ -1,8 +1,7 @@
 from ray import workflow
-from contrib import workflow as contrib_workflow
-from contrib.workflow.graph.node import DataNode, FunctionNode
+from contrib.workflow import graph
+from contrib.workflow.graph import DAG, DataNode, FunctionNode
 
-from contrib.workflow.graph.dag import DAG
 import shutil
 
 
@@ -13,7 +12,7 @@ workflow.init(storage)
 data_input = DataNode("data_input", 5)
 
 
-@contrib_workflow.graph.node
+@graph.node
 def minus_1(x):
     return x - 1
 
@@ -33,5 +32,5 @@ def factorial(n):
 
 factorial_node = FunctionNode(factorial)
 
-graph = DAG.sequential([data_input, minus_1, factorial_node])
-print(graph.execute())
+dag = DAG.sequential([data_input, minus_1, factorial_node])
+print(dag.execute())

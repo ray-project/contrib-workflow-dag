@@ -1,9 +1,8 @@
 import ray
 from ray import workflow
-from contrib import workflow as contrib_workflow
-from contrib.workflow.graph.node import DataNode
+from contrib.workflow import graph
+from contrib.workflow.graph import DAG, DataNode
 
-from contrib.workflow.graph.dag import DAG
 import shutil
 
 
@@ -19,17 +18,17 @@ data_input_2 = DataNode("input2", ray.put(20))
 
 
 # input with FunctionNode
-@contrib_workflow.graph.node
+@graph.node
 def data_input_3():
     return 30
 
 
-@contrib_workflow.graph.node
+@graph.node
 def minus(left: int, right: int) -> int:
     return left - right
 
 
-@contrib_workflow.graph.node
+@graph.node
 def multiply(a: int, b: int) -> int:
     return a * b
 
@@ -44,18 +43,18 @@ data_input_2----------↑            ↓
 data_input_3-----------------------↑
 """
 
-graph = DAG()
-graph.add_edge(data_input_1, minus, 0)
-graph.add_edge(data_input_2, minus, 1)
-graph.add_edge(minus, multiply, 0)
-graph.add_edge(data_input_3, multiply, 1)
+dag = DAG()
+dag.add_edge(data_input_1, minus, 0)
+dag.add_edge(data_input_2, minus, 1)
+dag.add_edge(minus, multiply, 0)
+dag.add_edge(data_input_3, multiply, 1)
 
-print(graph.execute())
+print(dag.execute())
 
-graph.reset()
-graph.add_edge(data_input_1, minus, "left")
-graph.add_edge(data_input_2, minus, "right")
-graph.add_edge(minus, multiply, "a")
-graph.add_edge(data_input_3, multiply, "b")
+dag = DAG()
+dag.add_edge(data_input_1, minus, "left")
+dag.add_edge(data_input_2, minus, "right")
+dag.add_edge(minus, multiply, "a")
+dag.add_edge(data_input_3, multiply, "b")
 
-print(graph.execute())
+print(dag.execute())
