@@ -18,7 +18,7 @@ class ExecutionType(Enum):
     FIT = 0,
     PREDICT = 1,
     SCORE = 2
-    
+
 def simplenode(inputtuple, handler):
     assert handler is not None
     handler = workflow.get_actor(handler)
@@ -91,6 +91,19 @@ class MLNode():
 
     def __setstate__(self, estimator):
         self.estimator = estimator
+
+class AndNode():
+    def __init__(self, node_name, andfunction):
+        self.__node_name = node_name
+        self.__andfunction = andfunction
+    def get_node_name(self):
+        """
+        Returns the node name
+        :return: The name of this node
+        """
+        return self.__node_name
+    def get_node(self):
+        return contrib.workflow.node(self.__andfunction)
 
 class EstimatorNode():
     def __init__(self, node_name: str, estimator: BaseEstimator):
