@@ -41,10 +41,6 @@ the given node.
 ![dag-example](source/images/dag-example.png)
 Run above workflow using graph APIs:
 ```python
-data_input_1 = DataNode("input1", 10)
-data_input_2 = DataNode("input2", 20)
-data_input_3 = DataNode("input3", 30)
-
 @graph.node
 def minus(left: int, right: int) -> int:
     return left - right
@@ -56,12 +52,19 @@ def multiply(a: int, b: int) -> int:
 
 dag = DAG()
 
-dag.add_edge(data_input_1, minus, "left")
-dag.add_edge(data_input_2, minus, "right")
 dag.add_edge(minus, multiply, "a")
-dag.add_edge(data_input_3, multiply, "b")
 
-dag.execute()
+data = {
+    minus: {
+        "left": 10,
+        "right": 20
+    },
+    multiply: {
+        "b": 30
+    }
+}
+
+dag.execute(data)
 ```
 
 
@@ -87,3 +90,5 @@ the intput type, how it is connected to the functional nodes and, etc. Also,
 think about tensorflow - the graph does not hold any real data, but it does
 have input layer which defined the shape of the input data. Such placeholder 
 is very useful to make the graph clear, complete and strict.
+
+For DataNode implementation and examples, refer to [DataNode branch](https://github.com/ray-project/contrib-workflow-dag/tree/DataNode).

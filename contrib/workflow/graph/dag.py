@@ -27,8 +27,14 @@ class DAG:
         self._node_levels = {}
         self._level_nodes = {}
 
-    def execute(self, node=None):
+    def execute(self, data=None, node=None):
         """Execute the graph, optionally on a target node.
+
+        Data is passed to the graph with "data" argument in the form of
+        a dictionary {nodeA: inputA; nodeB: inputB, ...}.
+        Each input is another dictionary containing the data passed
+        to the particular node inputA: {k1: v1, k2: v2, ...}, where
+        keys can be either int (for positional arg) or str (for kwargs).
 
         If node is not None, it will execute on the target node only,
         i.e. all pre-nodes relate to the target node will be executed
@@ -37,53 +43,69 @@ class DAG:
         layer. TODO: what would be a better default behavior?
 
         Example:
-            >>> data_input_1 = DataNode("input1", 10)
-            >>> data_input_2 = DataNode("input2", 20)
-            >>> data_input_3 = DataNode("input3", 30)
 
-            >>> @workflow.node
-            ... def minus(left: int, right: int) -> int:
+            data_input_1----------↓
+                                minus----------↓
+            data_input_2----------↑            ↓
+                                            multiply
+            data_input_3-----------------------↑
+
+            >>> @graph.node
+            ... def minus(left, right):
             ...     left - right
 
-            >>> @workflow.node
-            ... def multiply(a: int, b: int) -> int:
+            >>> @graph.node
+            ... def multiply(a, b):
             ...     return a * b
 
-            >>> graph = DAG()
-            >>> graph.add_edge(data_input_1, minus, 0)
-            >>> graph.add_edge(data_input_2, minus, 1)
-            >>> graph.add_edge(minus, multiply, 0)
-            >>> graph.add_edge(data_input_3, multiply, 1)
-            >>> result = graph.execute()
+            >>> dag = DAG()
+            >>> dag.add_edge(minus, multiply, "a")
+            >>> dag.execute(data={
+            ...     minus: {
+            ...         "left": 10,
+            ...         "right": 20
+            ...     },
+            ...     multiply: {
+            ...         "b": 30
+            ...     }
+            ... })
 
         Args:
+            data: data to be passed to the graph.
             node: Target node to execute on.
 
         Returns:
 
         """
-        return self._execute(node)
+        return self._execute(data, node)
 
-    def _execute(self, node=None):
+    def _execute(self, data=None, node=None):
+        data = data or {}
+
         nodes_by_level = self.get_nodes_by_level()
         final = None
         for level in nodes_by_level:
             for _node in nodes_by_level[level]:
-                final = self._execute_node(_node)
+                final = self._execute_node(_node, data.get(_node, {}))
         if node is not None:
             return self._node_output[node].run()
         else:
             return final.run()
 
-    def _execute_node(self, node: Node):
+    def _execute_node(self, node: Node, arg_vals=None):
         """
         lazy execution
-        This will populate the step function result to self._node_output, skipped if already populated
+        This will populate the step function result to self._node_output, skipped if already populated.
+
+        Each node takes input from two places: upstream nodes (outputs from in_node) and user inputs
+        (data passed to dag.execute()), so we need to gather and combine both and feed into the current
+        node.
         """
         if node in self._node_output:
             return self._node_output[node]
         args_pos_and_val = []
         kwargs = {}
+        # Get input from upstream nodes
         for pre_node in self.get_pre_nodes(node):
             mapping = self._node_in_args[node][pre_node]
             value = self._node_output[pre_node]
@@ -91,6 +113,14 @@ class DAG:
                 args_pos_and_val.append([mapping, value])
             else:
                 kwargs[mapping] = value
+        # Get input from user inputs
+        args_vals = arg_vals or {}
+        for k, v in args_vals.items():
+            if isinstance(k, int):
+                args_pos_and_val.append([k, v])
+            else:
+                kwargs[k] = v
+        # validate and sort args
         args_pos_and_val.sort(key=lambda l: l[0])
         args_pos = [item[0] for item in args_pos_and_val]
         assert args_pos == list(range(len(args_pos_and_val))), \
@@ -117,8 +147,11 @@ class DAG:
     @classmethod
     def sequential(cls, nodes):
         dag = cls()
-        for i in range(len(nodes) - 1):
-            dag.add_edge(nodes[i], nodes[i+1])
+        if len(nodes) == 1:
+            dag.add_node(nodes[0])
+        else:
+            for i in range(len(nodes) - 1):
+                dag.add_edge(nodes[i], nodes[i+1])
         return dag
 
     def add_edge(self, from_node: Node, to_node: Node, arg_mapping: Union[int, str] = 0):
@@ -135,34 +168,39 @@ class DAG:
         means the output of node5 will become the kwarg "a" of node6's input.
 
         Example:
-            >>> data_input_1 = DataNode("input1", 10)
-            >>> data_input_2 = DataNode("input2", 20)
-            >>> data_input_3 = DataNode("input3", 30)
-
-            >>> @workflow.node
+            >>> @graph.node
             ... def minus(left: int, right: int) -> int:
             ...     left - right
 
-            >>> @workflow.node
+            >>> @graph.node
             ... def multiply(a: int, b: int) -> int:
             ...     return a * b
 
             >>> # Use positional args
-            >>> graph = DAG()
-            >>> graph.add_edge(data_input_1, minus, 0)
-            >>> graph.add_edge(data_input_2, minus, 1)
-            >>> graph.add_edge(minus, multiply, 0)
-            >>> graph.add_edge(data_input_3, multiply, 1)
-            >>> result = graph.execute()
+            >>> dag = DAG()
+            >>> dag.add_edge(minus, multiply, 0)
+            >>> dag.execute(data={
+            ...     minus: {
+            ...         0: 10,
+            ...         1: 20
+            ...     },
+            ...     multiply: {
+            ...         1: 30
+            ...     }
+            ... })
 
             >>> # Use kwargs
-            >>> graph = DAG()
-            >>> graph.add_edge(data_input_1, minus, "left")
-            >>> graph.add_edge(data_input_2, minus, "right")
-            >>> graph.add_edge(minus, multiply, "a")
-            >>> graph.add_edge(data_input_3, multiply, "b")
-            >>> result = graph.execute()
-
+            >>> dag = DAG()
+            >>> dag.add_edge(minus, multiply, "a")
+            >>> dag.execute(data={
+            ...     minus: {
+            ...         "left": 10,
+            ...         "right": 20
+            ...     },
+            ...     multiply: {
+            ...         "b": 30
+            ...     }
+            ... })
 
         Args:
             from_node: In node.
