@@ -101,8 +101,10 @@ class DAG:
         (data passed to dag.execute()), so we need to gather and combine both and feed into the current
         node.
         """
-        if node in self._node_output:
-            return self._node_output[node]
+
+        # TODO: potential cache which won't affect re-run with different input data?
+        # if node in self._node_output:
+        #     return self._node_output[node]
         args_pos_and_val = []
         kwargs = {}
         # Get input from upstream nodes
