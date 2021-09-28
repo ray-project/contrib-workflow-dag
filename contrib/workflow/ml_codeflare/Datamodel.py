@@ -2,7 +2,6 @@ import ray
 from ray import workflow
 import contrib
 import contrib.workflow.graph as contrib_workflow
-from contrib.workflow.graph.node import DataNode
 from contrib.workflow.graph.dag import DAG
 from contrib.workflow.ml_codeflare.Exceptions import *
 
@@ -151,8 +150,8 @@ class Pipeline:
         if self.__id is not None:
             self.__persisteddag = workflow.get_actor(self.__id)
             self.__persisteddag.set_dag.run_async(dag)
-    def execute_pipeline(self):
-        results = self.__dag.execute()
+    def execute_pipeline(self, inputdata):
+        results = self.__dag.execute(inputdata)
         if self.__id is not None:
             self.__persisteddag = workflow.get_actor(self.__id)
             self.__persisteddag.set_dag.run_async(self.__dag)

@@ -2,7 +2,6 @@ import ray
 from ray import workflow
 import contrib
 import contrib.workflow.graph as contrib_workflow
-from contrib.workflow.graph.node import DataNode
 from contrib.workflow.graph.dag import DAG
 import shutil
 from enum import Enum
@@ -141,20 +140,18 @@ print(type(func_dict["node_j"]))
 
 graph = DAG()
 pipeline_input_fit = (X_train, y_train, ExecutionType.FIT)
-data_input_fit = DataNode("input_fit", pipeline_input_fit)
-graph.add_edge(data_input_fit, node_jf, 0)
+data_input_fit = {node_jf: {0:pipeline_input_fit}}
 graph.add_edge(node_jf, node_kf, 0)
 graph.add_edge(node_kf, node_lf, 0)
-(X_out, y_out, fit) = graph.execute()
+(X_out, y_out, fit) = graph.execute(data_input_fit)
 print("\n\n output after FIT: ", X_out.shape, y_out.shape, fit)
 
 graph = DAG()
 pipeline_input_predict = (X_test, y_test, ExecutionType.PREDICT)
-data_input_predict = DataNode("input_predict", pipeline_input_predict)
-graph.add_edge(data_input_predict, node_jf, 0)
+data_input_predict = {node_jf: {0:pipeline_input_predict}}
 graph.add_edge(node_jf, node_kf, 0)
 graph.add_edge(node_kf, node_lf, 0)
-(X_out, y_out, predict) = graph.execute()
+(X_out, y_out, predict) = graph.execute(data_input_predict)
 print("\n\n output after PREDICT: ", X_out.shape, y_out.shape, predict)
 
 nodek_actor = workflow.get_actor("node_k")
