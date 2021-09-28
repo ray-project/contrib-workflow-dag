@@ -163,3 +163,84 @@ class Pipeline:
             return self.__persisteddag.get_dag()
         else:
             raise PipelineException('Current pipeline was not saved')
+
+class PipelineParam:
+    """
+    This class captures the pipeline parameters, which can be changed for various forms of exploration.
+    It is a fairly simple holder class capturing for each node, the corresponding estimators parameters
+    as a dictionary.
+    It also provides creating a PipelineParam object from a parameter grid, typically used in
+    sklearn.GridSearchCV.
+    Examples
+    --------
+    A simple example to create a pipeline param from a parameter grid.
+    .. code-block:: python
+        param_grid = {
+            'pca__n_components': [5, 15, 30, 45, 64],
+            'logistic__C': np.logspace(-4, 4, 4),
+        }
+        pipeline_param = dm.PipelineParam.from_param_grid(param_grid)
+    """
+    def __init__(self):
+        self.__node_name_param_map__ = {}
+
+    @staticmethod
+    def from_param_grid(fit_params: dict):
+        """
+        A method to create a a pipeline param object from a typical parameter grid with the standard
+        sklearn convention of __. For example, `pca__n_components` is a parameter for node name pca
+        and the parameter name is n_components. The parameter grid creates a full grid exploration of
+        the parameters.
+        :param fit_params: Dictionary of parameter name in the sklearn convention to the parameter list
+        :return: A pipeline param object
+        """
+        pipeline_param = PipelineParam()
+        fit_params_nodes = {}
+        for pname, pval in fit_params.items():
+            if '__' not in pname:
+                raise ValueError(
+                    "Pipeline.fit does not accept the {} parameter. "
+                    "You can pass parameters to specific steps of your "
+                    "pipeline using the stepname__parameter format, e.g. "
+                    "`Pipeline.fit(X, y, logisticregression__sample_weight"
+                    "=sample_weight)`.".format(pname))
+            node_name, param = pname.split('__', 1)
+            if node_name not in fit_params_nodes.keys():
+                fit_params_nodes[node_name] = {}
+
+            fit_params_nodes[node_name][param] = pval
+
+        # we have the split based on convention, now to create paramter grid for each node
+        for node_name, param in fit_params_nodes.items():
+            pg = ParameterGrid(param)
+            pg_list = list(pg)
+            for i in range(len(pg_list)):
+                p = pg_list[i]
+                curr_node_name = node_name + '__' + str(i)
+                pipeline_param.add_param(curr_node_name, p)
+
+        return pipeline_param
+
+    def add_param(self, node_name: str, params: dict):
+        """
+        Add a parameter to the given node name
+        :param node_name: Node name to add parameter to
+        :param params: Parameter as a dictionary
+        :return: None
+        """
+        self.__node_name_param_map__[node_name] = params
+
+    def get_param(self, node_name: str):
+        """
+        Returns the parameter dict for the given node name
+        :param node_name: Node name to retrieve parameters for
+        :return: Dict of parameters
+        """
+        return self.__node_name_param_map__[node_name]
+
+    def get_all_params(self):
+        """
+        Return all the parmaters for the given pipeline param
+        :return: A dict from node name to the dictionary of parameters
+        """
+        return self.__node_name_param_map__
