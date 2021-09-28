@@ -1,8 +1,8 @@
 import ray
 from ray import workflow
-from contrib import workflow as contrib_workflow
-from contrib.workflow.node import DataNode
-from contrib.workflow.dag import DAG
+import contrib.workflow.graph as contrib_workflow
+from contrib.workflow.graph.node import DataNode
+from contrib.workflow.graph.dag import DAG
 import shutil
 from enum import Enum
 import sys

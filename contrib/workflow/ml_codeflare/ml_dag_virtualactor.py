@@ -1,8 +1,9 @@
 import ray
 from ray import workflow
-from contrib import workflow as contrib_workflow
-from contrib.workflow.node import DataNode
-from contrib.workflow.dag import DAG
+import contrib
+import contrib.workflow.graph as contrib_workflow
+from contrib.workflow.graph.node import DataNode
+from contrib.workflow.graph.dag import DAG
 import shutil
 from enum import Enum
 
@@ -120,19 +121,19 @@ node_k = MLNode.get_or_create("node_k", MinMaxScaler())
 node_l = MLNode.get_or_create("node_l", DecisionTreeClassifier(max_depth=3))
 
 '''
-@contrib_workflow.node
+@contrib_workflow.graph.node
 def node_jf(inputtuple):
     return simplenode(inputtuple, "node_j")
-@contrib_workflow.node
+@contrib_workflow.graph.node
 def node_kf(inputtuple):
     return simplenode(inputtuple, "node_k")
-@contrib_workflow.node
+@contrib_workflow.graph.node
 def node_lf(inputtuple):
     return simplenode(inputtuple, "node_l")
 '''
 
 func_dict = {}
-func_string = '@contrib_workflow.node\ndef xxxx(inputtuple):\n\treturn simplenode(inputtuple, "yyyy")\nfunc_dict["yyyy"]=xxxx\n'
+func_string = '@contrib.workflow.graph.node\ndef xxxx(inputtuple):\n\treturn simplenode(inputtuple, "yyyy")\nfunc_dict["yyyy"]=xxxx\n'
 for nodename in ["node_j", "node_k", "node_l"]:
     declare_func = func_string.replace('xxxx',nodename+'f',2).replace('yyyy',nodename,2)
     exec(declare_func)
@@ -147,7 +148,7 @@ graph.add_edge(node_kf, node_lf, 0)
 (X_out, y_out, fit) = graph.execute()
 print("\n\n output after FIT: ", X_out.shape, y_out.shape, fit)
 
-graph.reset()
+graph = DAG()
 pipeline_input_predict = (X_test, y_test, ExecutionType.PREDICT)
 data_input_predict = DataNode("input_predict", pipeline_input_predict)
 graph.add_edge(data_input_predict, node_jf, 0)

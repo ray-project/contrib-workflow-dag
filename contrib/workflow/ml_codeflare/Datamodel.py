@@ -1,9 +1,9 @@
 import ray
 from ray import workflow
 import contrib
-from contrib import workflow as contrib_workflow
-from contrib.workflow.node import DataNode
-from contrib.workflow.dag import DAG
+import contrib.workflow.graph as contrib_workflow
+from contrib.workflow.graph.node import DataNode
+from contrib.workflow.graph.dag import DAG
 from contrib.workflow.ml_codeflare.Exceptions import *
 
 from abc import ABC, abstractmethod
@@ -103,7 +103,7 @@ class AndNode():
         """
         return self.__node_name
     def get_node(self):
-        return contrib.workflow.node(self.__andfunction)
+        return contrib.workflow.graph.node(self.__andfunction)
 
 class EstimatorNode():
     def __init__(self, node_name: str, estimator: BaseEstimator):
@@ -124,7 +124,7 @@ class EstimatorNode():
         return node_actor.get_model.run_async()
     def get_node(self):
         func_dict = {}
-        func_string = '@contrib.workflow.node\ndef xxxx(inputtuple):\n\treturn simplenode(inputtuple, "yyyy")\nfunc_dict["yyyy"]=xxxx\n'
+        func_string = '@contrib.workflow.graph.node\ndef xxxx(inputtuple):\n\treturn simplenode(inputtuple, "yyyy")\nfunc_dict["yyyy"]=xxxx\n'
         declare_func = func_string.replace('xxxx',self.__node_name+'f',2).replace('yyyy',self.__node_name,2)
         exec(declare_func)
         # print(func_dict[self.__node_name])
