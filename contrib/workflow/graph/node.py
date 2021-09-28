@@ -22,24 +22,6 @@ class Node(metaclass=ABCMeta):
 
 
 @PublicAPI(stability="beta")
-class DataNode(Node):
-    """DataNode class.
-
-    DataNode contains only value (either object or ray.ObjectRef),
-    and is typically used as data input for the graph.
-    """
-    def __init__(self, name, value):
-        self._name = name
-        self._value = value
-
-    def get_name(self):
-        return self._name
-
-    def execute(self):
-        return self._value
-
-
-@PublicAPI(stability="beta")
 class FunctionNode(Node):
     """FunctionNode class.
 
