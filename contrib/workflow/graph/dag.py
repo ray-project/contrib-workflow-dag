@@ -2,7 +2,7 @@ from typing import Union
 
 from ray.util.annotations import PublicAPI
 
-from contrib.workflow.node import Node
+from contrib.workflow.graph.node import Node
 
 
 @PublicAPI(stability="beta")
@@ -10,19 +10,6 @@ class DAG:
     """DAG class.
     """
     def __init__(self):
-        self._nodes = {}
-        self._edges = []
-        self._upstreams = {}
-        self._downstreams = {}
-        self._node_levels = {}
-        self._level_nodes = {}
-        self._node_output = {}
-        self._node_in_args = {}
-
-    def reset(self):
-        self._reset()
-
-    def _reset(self):
         self._nodes = {}
         self._edges = []
         self._upstreams = {}
@@ -129,7 +116,7 @@ class DAG:
 
     @classmethod
     def sequential(cls, nodes):
-        dag = DAG()
+        dag = cls()
         for i in range(len(nodes) - 1):
             dag.add_edge(nodes[i], nodes[i+1])
         return dag

@@ -48,17 +48,22 @@ class FunctionNode(Node):
     the output of the step function is used as node output.
     """
     def __init__(self,
-                 func: Callable,
+                 func: Union[Callable, WorkflowStepFunction],
                  name=None,
                  step_options=None):
         if step_options is not None and not isinstance(step_options, dict):
             raise ValueError("step_options must be a dict.")
 
         self._func = func
-        self._name = name or get_module(func) + "." + get_qualname(func)
         self._step_options = step_options or {}
 
-        self._step_func = WorkflowStepFunction(self._func, **self._step_options)
+        if isinstance(func, WorkflowStepFunction):
+            self._step_func = self._func.options(**self._step_options)
+            self._name = name or self._step_func.step.__name__
+
+        else:
+            self._step_func = WorkflowStepFunction(self._func, **self._step_options)
+            self._name = name or get_module(func) + "." + get_qualname(func)
 
     def get_name(self):
         return self._name
@@ -81,31 +86,6 @@ class FunctionNode(Node):
             The node itself.
         """
         return FunctionNode(self._func, name, step_options)
-
-    def __call__(self, *args, **kwargs):
-        raise TypeError("Workflow nodes cannot be called directly")
-
-
-@PublicAPI(stability="beta")
-class StepFunctionNode(Node):
-    """StepFunctionNode class.
-
-    StepFunctionNode leverages workflow's step function to achieve a functional node.
-    Input data is passed to the underlying step function while
-    the output of the step function is used as node output.
-    """
-    def __init__(self,
-                 step_func: WorkflowStepFunction,
-                 name=None):
-
-        self._step_func = step_func
-        self._name = name or self._step_func.step.__name__
-
-    def get_name(self):
-        return self._name
-
-    def execute(self, *args, **kwargs):
-        return self._step_func.step(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
         raise TypeError("Workflow nodes cannot be called directly")
