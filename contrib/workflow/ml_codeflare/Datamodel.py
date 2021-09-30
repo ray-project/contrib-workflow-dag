@@ -12,6 +12,7 @@ import sklearn.base as base
 from sklearn.utils.validation import check_is_fitted
 from sklearn.exceptions import NotFittedError
 from datetime import datetime
+from sklearn.model_selection import ParameterGrid
 
 class ExecutionType(Enum):
     FIT = 0,
@@ -122,11 +123,11 @@ class EstimatorNode():
         node_actor = workflow.get_actor(self.__node_name)
         return node_actor.get_model.run_async()
     def get_node(self):
+        # append 'f' to Estimator __node_name for the corresponding function name (a dag node_name)
         func_dict = {}
         func_string = '@contrib.workflow.graph.node\ndef xxxx(inputtuple):\n\treturn simplenode(inputtuple, "yyyy")\nfunc_dict["yyyy"]=xxxx\n'
         declare_func = func_string.replace('xxxx',self.__node_name+'f',2).replace('yyyy',self.__node_name,2)
         exec(declare_func)
-        # print(func_dict[self.__node_name])
         return func_dict[self.__node_name]
 
 class Pipeline:
@@ -145,6 +146,9 @@ class Pipeline:
         else:
             self.__fanin[to_node] = 0
         self.__dag.add_edge(from_node,to_node,self.__fanin[to_node])
+        
+    def get_dag(self):
+        return self.__dag
     def create_pipeline_via_dag(self, dag):
         self.__dag = dag
         if self.__id is not None:
@@ -159,7 +163,7 @@ class Pipeline:
     def return_pipeline(self):
         if self.__id is not None:
             self.__persisteddag = workflow.get_actor(self.__id)
-            return self.__persisteddag.get_dag()
+            return self.__persisteddag.get_dag.run_async()
         else:
             raise PipelineException('Current pipeline was not saved')
 
@@ -204,6 +208,8 @@ class PipelineParam:
                     "`Pipeline.fit(X, y, logisticregression__sample_weight"
                     "=sample_weight)`.".format(pname))
             node_name, param = pname.split('__', 1)
+            # append node_name to match the function name returned from EstimatorNode.get_node()
+            node_name = node_name+'f'
             if node_name not in fit_params_nodes.keys():
                 fit_params_nodes[node_name] = {}
 
