@@ -40,7 +40,7 @@ class PersistedDAG():
 
 @ray.workflow.virtual_actor
 class MLNode():
-    def __init__(self, estimator):
+    def __init__(self, estimator: BaseEstimator):
         self.__createdTime = datetime.now()
         self.__lastInvokedAt = datetime.now()
         #self.node_id = node_id
@@ -125,8 +125,8 @@ class EstimatorNode():
     def get_node(self):
         # append 'f' to Estimator __node_name for the corresponding function name (a dag node_name)
         func_dict = {}
-        func_string = '@contrib.workflow.graph.node\ndef xxxx(inputtuple):\n\treturn simplenode(inputtuple, "yyyy")\nfunc_dict["yyyy"]=xxxx\n'
-        declare_func = func_string.replace('xxxx',self.__node_name+'f',2).replace('yyyy',self.__node_name,2)
+        func_string = '@contrib.workflow.graph.node(name="xxxx")\ndef xxxx(inputtuple):\n\treturn simplenode(inputtuple, "yyyy")\nfunc_dict["yyyy"]=xxxx\n'
+        declare_func = func_string.replace('xxxx',self.__node_name+'f',3).replace('yyyy',self.__node_name,2)
         exec(declare_func)
         return func_dict[self.__node_name]
 
@@ -146,7 +146,8 @@ class Pipeline:
         else:
             self.__fanin[to_node] = 0
         self.__dag.add_edge(from_node,to_node,self.__fanin[to_node])
-        
+    def get_name(self):
+        return self.__id
     def get_dag(self):
         return self.__dag
     def create_pipeline_via_dag(self, dag):
@@ -197,6 +198,7 @@ class PipelineParam:
         :param fit_params: Dictionary of parameter name in the sklearn convention to the parameter list
         :return: A pipeline param object
         """
+        
         pipeline_param = PipelineParam()
         fit_params_nodes = {}
         for pname, pval in fit_params.items():
