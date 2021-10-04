@@ -2,25 +2,19 @@
 
 ## Overview
 
-This repo provides a **Graph** layer implementation for running Ray workflows.
-
+This repo provides a **Graph** layer implementation and semantic enrichments for creatings and running Ray workflows.
 Graph (i.e. DAG) layer provides a higher level abstraction on top of workflow steps,
-aiming to make workflow construction more convenient and intuitive.
+aiming to make workflow construction more convenient and intuitive. It also exposes semantic information such as the
+type of execution, level of parallelism, and state of application.
 
 ## Graph vs. Workflow Step
 
-Existing workflow core apis are not designed for graph-like constructions, therefore,
-to construct a real workflow graph, we need to chain different steps 
-together in a less-intuitive way, which can grow less readable and harder
-to maintain when workflow graph becomes more and more complex.
+Workflows provide the building blocks for repeatable execution of "steps" in Ray. However, as we chain multiple steps and evolve the workflow graph, it can
+quickly become a challenge to maintain and modify this graph. DAG APIs enable the end user to abstract the underlying step graph by providing simple APIs for constructing workflows.
 
-DAG apis, on the other hand, provides a graph-based construction which 
-is more intuitive when building a workflow graph.
+Followings are two examples of graph construction.
 
-Followings are two simple examples for sequential and non-sequential graphs
-construction.
-
-### sequential workflow  
+### sequential workflow
 ![sequential-dag](source/images/sequential-dag.png)
 - Workflow step
 ```python
@@ -31,7 +25,7 @@ e.step(d.step(c.step(b.step(a.step()))))
 DAG.sequential([a, b, c, d, e])
 ```
 
-### non-sequential workflow
+### A more complex workflow
 ![non-linear-dag](source/images/non-linear.png)
 - Workflow step:
 ```python
