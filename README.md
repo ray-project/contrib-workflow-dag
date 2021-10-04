@@ -66,29 +66,3 @@ data = {
 
 dag.execute(data)
 ```
-
-
-
-## Open Discussions
-1. Why is DataNode necessary? i.e. why wrapping input data into a Node?
-Well, having to wrap inputs into a node seems complex and redundant, but it has 
-the following benefits:
-   1. Completes the graph structure and make inputs clear.  
-For multi-input graph like
-[this](https://github.com/ray-project/contrib-workflow-dag/blob/main/contrib/workflow/examples/simple_dag_example.py#L37), 
-having DataNode will help complete the graph structure and make the input
-layer clear re. how many input streams and how each input streams
-is connected to operational nodes. And it avoids running execution
-as complex as dag.execute(node, input={nodeA: {a: val1, b: val2, ...}, nodeB:{c: val3, d: val4, ...}, nodeC: ...)
-   2. Having DataNode sets a standard interface for all types of inputs.  
-For example, with a data stream from DB connection, one can simply
-subclass DataNode and create a new DBNode which can build the db connection
-and deliver data.
-   3. DataNode is a standard concept is many graph-based models, e.g. SPSS Modeler.    
-   A DataNode can ultimately be used as a placeholder which defines
-the intput type, how it is connected to the functional nodes and, etc. Also, 
-think about tensorflow - the graph does not hold any real data, but it does
-have input layer which defined the shape of the input data. Such placeholder 
-is very useful to make the graph clear, complete and strict.
-
-For DataNode implementation and examples, refer to [DataNode branch](https://github.com/ray-project/contrib-workflow-dag/tree/DataNode).
