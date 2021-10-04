@@ -2,7 +2,8 @@
 
 ## Overview
 
-This repo provides a **Graph** layer implementation and semantic enrichments for creatings and running Ray workflows.
+This repo provides a **Graph** layer implementation and semantic enrichment for creating and running Ray workflows.
+
 Graph (i.e. DAG) layer provides a higher level abstraction on top of workflow steps,
 aiming to make workflow construction more convenient and intuitive. It also exposes semantic information such as the
 type of execution, level of parallelism, and state of application.
@@ -25,7 +26,7 @@ e.step(d.step(c.step(b.step(a.step()))))
 DAG.sequential([a, b, c, d, e])
 ```
 
-### A more complex workflow
+### a more complex workflow
 ![non-linear-dag](source/images/non-linear.png)
 - Workflow step:
 ```python
