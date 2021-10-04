@@ -126,7 +126,7 @@ class EstimatorNode():
         # append 'f' to Estimator __node_name for the corresponding function name (a dag node_name)
         func_dict = {}
         func_string = '@contrib.workflow.graph.node(name="xxxx")\ndef xxxx(inputtuple):\n\treturn simplenode(inputtuple, "yyyy")\nfunc_dict["yyyy"]=xxxx\n'
-        declare_func = func_string.replace('xxxx',self.__node_name+'f',3).replace('yyyy',self.__node_name,2)
+        declare_func = func_string.replace('xxxx',self.__node_name+'_vf',3).replace('yyyy',self.__node_name,2)
         exec(declare_func)
         return func_dict[self.__node_name]
 
@@ -211,7 +211,7 @@ class PipelineParam:
                     "=sample_weight)`.".format(pname))
             node_name, param = pname.split('__', 1)
             # append node_name to match the function name returned from EstimatorNode.get_node()
-            node_name = node_name+'f'
+            node_name = node_name+'_vf'
             if node_name not in fit_params_nodes.keys():
                 fit_params_nodes[node_name] = {}
 
