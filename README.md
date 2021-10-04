@@ -59,7 +59,7 @@ A DAG/Graph is typically constructed by
 `dag.add_edge(A, B, 0)` means adding "Node A -> Node B" to the graph 
 while Node A's output will become the input value for first positional argument of Node B.
 `in_arg_mapping` can be either positional (int) or kwargs (str).
-See [examples](https://github.com/ray-project/contrib-workflow-dag/blob/main/contrib/workflow/examples/simple_dag_example.py#L47)
+See [examples](https://github.com/ray-project/contrib-workflow-dag/blob/main/contrib/workflow/graph/examples/simple_dag_example.py#L34)
 for better understanding.
 
 DAG can be executed by running `dag.execute()`, optionally with a target
