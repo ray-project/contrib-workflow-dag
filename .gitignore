@@ -1,4 +1,7 @@
 # The build output should clearly not be checked in
+build/
+dist/
+
 *test-output.xml
 /bazel-*
 /python/ray/core
