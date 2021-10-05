@@ -73,7 +73,7 @@ def grid_search_cv(cv, pipeline, pipeline_input, pipeline_param):
             parameterized_nodes[node_name_part] = []
         # get the estimator from the virtual node in the original pipeline
         # The assumption: the node_name in the original pipeline has appended '_vf'
-        # To get the estimator virtual actor id we need to strip this 'f' at the end
+        # To get the estimator virtual actor id we need to strip this '_vf' at the end
         # print("\n\n node_name_part: ", node_name_part)
         v_actor = workflow.get_actor(node_name_part[:-3])
         estimator = v_actor.get_model.run_async()

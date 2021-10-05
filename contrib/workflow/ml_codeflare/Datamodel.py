@@ -123,7 +123,7 @@ class EstimatorNode():
         node_actor = workflow.get_actor(self.__node_name)
         return node_actor.get_model.run_async()
     def get_node(self):
-        # append 'f' to Estimator __node_name for the corresponding function name (a dag node_name)
+        # append '_vf' to Estimator __node_name for the corresponding function name (a dag node_name)
         func_dict = {}
         func_string = '@contrib.workflow.graph.node(name="xxxx")\ndef xxxx(inputtuple):\n\treturn simplenode(inputtuple, "yyyy")\nfunc_dict["yyyy"]=xxxx\n'
         declare_func = func_string.replace('xxxx',self.__node_name+'_vf',3).replace('yyyy',self.__node_name,2)
