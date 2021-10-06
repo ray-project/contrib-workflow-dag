@@ -143,7 +143,7 @@ def grid_search_cv(cv, pipeline, pipeline_input, pipeline_param):
             raise PipelineException("Currently only support a single input node")
         input_node = input_nodes[0]
         cv_scores = []
-        cv_estimators = []
+        cv_estimators = {}
         # for each pipeline, run through cv() with split input & collect score
         for X_train, X_test, y_train, y_test in split_inputs:
             pipeline_input_fit = (X_train, y_train, ExecutionType.FIT)
@@ -158,11 +158,11 @@ def grid_search_cv(cv, pipeline, pipeline_input, pipeline_param):
         for node_name, node in all_nodes.items():
         #    check if a node is a virtual actor
             if "_vf" in node_name:
-                print("\n\n node_name: ", node_name)
-                v_actor = workflow.get_actor(node_name_part[:-3])
+                #print("\n\n node_name: ", node_name)
+                v_actor = workflow.get_actor(node_name[:-3])
                 estimator = v_actor.get_model.run_async()
-                cv_estimators.append(ray.get(estimator))
+                cv_estimators[node_name[:-3]] = ray.get(estimator)
         results.append([cv_estimators, cv_scores])
-        print("\n\n finished pipeline: ", my_pipeline.get_name())
+        #print("\n\n finished pipeline: ", my_pipeline.get_name())
         
     return results

@@ -7,6 +7,7 @@ import shutil
 from enum import Enum
 import sys
 import inspect
+import statistics
 
 from typing import Callable, List
 import numpy as np
@@ -77,6 +78,47 @@ k = 5
 kf = KFold(k)
 
 results = grid_search_cv(kf, pipeline, pipeline_input, pipeline_param)
-## prepare the data
+## finding the best parameters
+
+best_estimators = None
+best_mean_scores = 0.0
+best_n_components = 0
+
+df = pd.DataFrame(columns = ('n_components', 'mean_test_score', 'std_test_score'))
+
+for estimators_scores in results:
+    cv_estimators = estimators_scores[0]
+    scores = estimators_scores[1]
+    mean = statistics.mean(scores)
+    std = statistics.stdev(scores)
+    n_components = 0
+    params = {}
+    for em_name, em in cv_estimators.items():
+        params = em.get_params()
+        if 'n_components' in params.keys():
+            n_components = params['n_components']
+            assert (n_components > 0)
+            
+    df = df.append({'n_components': n_components, 'mean_test_score': mean, 'std_test_score': std}, ignore_index=True)
+    
+    if mean > 0.92:
+        print(mean)
+        for em_name, em in cv_estimators.items():
+            print(em_name, em.get_params())
+        
+    if mean > best_mean_scores:
+        best_estimators = cv_estimators
+        best_mean_scores = mean
+        best_n_components = n_components
+        
+print("\n\n best pipeline: \n")
+for em_name, em in best_estimators.items():
+    print(em_name, em.get_params())
+print("\n\n best mean_scores: ", best_mean_scores)
+        
+
+    
+
+
 
 
