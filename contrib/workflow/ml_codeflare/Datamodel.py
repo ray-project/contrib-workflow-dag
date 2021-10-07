@@ -56,6 +56,7 @@ class MLNode():
             X = self.estimator.fit_transform(X)
             return X, y, mode
 
+    @workflow.virtual_actor.readonly
     def predict(self, inputtuple):
         (X, y, mode) = inputtuple
         if base.is_classifier(self.estimator) or base.is_regressor(self.estimator):
@@ -65,6 +66,7 @@ class MLNode():
             X = self.estimator.transform(X)
             return X, y, mode
 
+    @workflow.virtual_actor.readonly
     def score(self, inputtuple):
         (X, y, mode) = inputtuple
         if base.is_classifier(self.estimator) or base.is_regressor(self.estimator):
@@ -73,7 +75,8 @@ class MLNode():
         else:
             X = self.estimator.transform(X)
             return X, y, mode
-
+            
+    @workflow.virtual_actor.readonly
     def get_model(self):
         return self.estimator
 
@@ -108,6 +111,7 @@ class AndNode():
 class EstimatorNode():
     def __init__(self, node_name: str, estimator: BaseEstimator):
         self.__virtual_actor = MLNode.get_or_create(node_name, estimator)
+        ray.get(self.__virtual_actor.ready())
         self.__node_name = node_name
     def get_node_name(self):
         """

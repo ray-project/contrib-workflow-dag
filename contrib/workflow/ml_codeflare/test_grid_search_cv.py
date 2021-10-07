@@ -9,6 +9,7 @@ import sys
 import inspect
 import statistics
 
+import timeit
 from typing import Callable, List
 import numpy as np
 import pandas as pd
@@ -42,6 +43,8 @@ X_digits, y_digits = datasets.load_digits(return_X_y=True)
 pca = PCA()
 # set the tolerance to a large value to make the example faster
 logistic = LogisticRegression(max_iter=10000, tol=0.1)
+
+start = timeit.timeit()
 
 pipeline = dm.Pipeline()
 node_pca = dm.EstimatorNode('pca', pca).get_node()
@@ -77,8 +80,12 @@ pipeline_input = (X_digits, y_digits)
 k = 5
 kf = KFold(k)
 
+
 results = grid_search_cv(kf, pipeline, pipeline_input, pipeline_param)
 ## finding the best parameters
+
+end = timeit.timeit()
+print("\n\n elaspe time: \n\n", end-start)
 
 best_estimators = None
 best_mean_scores = 0.0
