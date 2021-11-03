@@ -75,7 +75,7 @@ class MLNode():
         else:
             X = self.estimator.transform(X)
             return X, y, mode
-            
+
     @workflow.virtual_actor.readonly
     def get_model(self):
         return self.estimator
@@ -136,11 +136,22 @@ class EstimatorNode():
 
 class Pipeline:
     def __init__(self, id=None):
-        self.__dag = DAG()
-        self.__fanin = {}
         self.__id = None
         if id is not None:
             self.__id = id
+            try:
+                existing = workflow.get_actor(self.__id)
+            except:
+                existing = None
+            if existing is None:
+                self.__dag = DAG()
+                self.__fanin = {}
+                self.__persisteddag = PersistedDAG.get_or_create(self.__id, self.__dag)
+            else:
+                self.__dag = ray.get(existing.get_dag.run_async())
+        else:
+            self.__dag = DAG()
+            self.__fanin = {}
             self.__persisteddag = PersistedDAG.get_or_create(self.__id, self.__dag)
     def __str__(self):
         return self.__id__
@@ -165,12 +176,7 @@ class Pipeline:
             self.__persisteddag = workflow.get_actor(self.__id)
             self.__persisteddag.set_dag.run_async(self.__dag)
         return results
-    def return_pipeline(self):
-        if self.__id is not None:
-            self.__persisteddag = workflow.get_actor(self.__id)
-            return self.__persisteddag.get_dag.run_async()
-        else:
-            raise PipelineException('Current pipeline was not saved')
+
 
 class PipelineParam:
     """
@@ -202,7 +208,7 @@ class PipelineParam:
         :param fit_params: Dictionary of parameter name in the sklearn convention to the parameter list
         :return: A pipeline param object
         """
-        
+
         pipeline_param = PipelineParam()
         fit_params_nodes = {}
         for pname, pval in fit_params.items():
