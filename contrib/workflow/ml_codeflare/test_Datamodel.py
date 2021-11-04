@@ -67,22 +67,22 @@ node_c = dm.AndNode('feature_union', feature_union).get_node()
 node_d = dm.EstimatorNode('decisiontree', DecisionTreeClassifier(max_depth=3)).get_node()
 
 pipeline_input_fit = (X_train, y_train, ExecutionType.FIT)
-data_input_fit = {node_a:{0:pipeline_input_fit}}
+
 pipeline.add_edge(node_a, node_b1)
 pipeline.add_edge(node_a, node_b2)
 pipeline.add_edge(node_b1, node_c)
 pipeline.add_edge(node_b2, node_c)
 pipeline.add_edge(node_c, node_d)
-(X_out, y_out, fit) = pipeline.execute_pipeline(data_input_fit)
+(X_out, y_out, fit) = pipeline.execute_pipeline(pipeline_input_fit)
 print("\n\n output after FIT: ", X_out.shape, y_out.shape, fit)
 
 reactivated_pipeline = dm.Pipeline('predict_'+datetime.now().strftime("%Y-%m-%d_%H:%M"))
 pipeline_input_predict = (X_test, y_test, ExecutionType.PREDICT)
-data_input_predict = {node_a:{0:pipeline_input_predict}}
+
 reactivated_pipeline.add_edge(node_a, node_b1)
 reactivated_pipeline.add_edge(node_a, node_b2)
 reactivated_pipeline.add_edge(node_b1, node_c)
 reactivated_pipeline.add_edge(node_b2, node_c)
 reactivated_pipeline.add_edge(node_c, node_d)
-(X_out, y_out, predict) = reactivated_pipeline.execute_pipeline(data_input_predict)
+(X_out, y_out, predict) = reactivated_pipeline.execute_pipeline(pipeline_input_predict)
 print("\n\n output after PREDICT: ", X_out.shape, y_out.shape, predict)

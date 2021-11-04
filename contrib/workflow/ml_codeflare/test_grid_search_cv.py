@@ -105,27 +105,20 @@ for estimators_scores in results:
         if 'n_components' in params.keys():
             n_components = params['n_components']
             assert (n_components > 0)
-            
+
     df = df.append({'n_components': n_components, 'mean_test_score': mean, 'std_test_score': std}, ignore_index=True)
-    
+
     if mean > 0.92:
         print(mean)
         for em_name, em in cv_estimators.items():
             print(em_name, em.get_params())
-        
+
     if mean > best_mean_scores:
         best_estimators = cv_estimators
         best_mean_scores = mean
         best_n_components = n_components
-        
+
 print("\n\n best pipeline: \n")
 for em_name, em in best_estimators.items():
     print(em_name, em.get_params())
 print("\n\n best mean_scores: ", best_mean_scores)
-        
-
-    
-
-
-
-

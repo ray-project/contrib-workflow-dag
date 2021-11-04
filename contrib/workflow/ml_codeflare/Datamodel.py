@@ -152,7 +152,7 @@ class Pipeline:
         else:
             self.__dag = DAG()
             self.__fanin = {}
-            self.__persisteddag = PersistedDAG.get_or_create(self.__id, self.__dag)
+            #self.__persisteddag = PersistedDAG.get_or_create(self.__id, self.__dag)
     def __str__(self):
         return self.__id__
     def add_edge(self, from_node, to_node):
@@ -171,7 +171,10 @@ class Pipeline:
             self.__persisteddag = workflow.get_actor(self.__id)
             self.__persisteddag.set_dag.run_async(dag)
     def execute_pipeline(self, inputdata):
-        results = self.__dag.execute(inputdata)
+        # connect inputdata to the input node of the pipeline
+        inputnode = self.__dag.get_input_nodes()[0]
+        updated_inputdata = {inputnode:{0:inputdata}}
+        results = self.__dag.execute(updated_inputdata)
         if self.__id is not None:
             self.__persisteddag = workflow.get_actor(self.__id)
             self.__persisteddag.set_dag.run_async(self.__dag)

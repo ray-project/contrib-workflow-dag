@@ -78,22 +78,22 @@ pipeline.add_edge(node_c, node_d)
 # create a fit pipeline from the base_pipeline
 
 pipeline_input_fit = (X_train, y_train, ExecutionType.FIT)
-fit_data = {node_a:{0:pipeline_input_fit}}
 
-(X_out, y_out, fit) = pipeline.execute_pipeline(fit_data)
+(X_out, y_out, fit) = pipeline.execute_pipeline(pipeline_input_fit)
 print("\n\n output after FIT: ", X_out.shape, y_out.shape, fit)
 print("\n\n")
 
 # run fit again with a different input data
 (X_train, X_test, y_train, y_test) = train_test_split(X, y, test_size=0.15)
 pipeline_input_fit = (X_train, y_train, ExecutionType.FIT)
-fit_data = {node_a:{0:pipeline_input_fit}}
-(X_out, y_out, fit) = pipeline.execute_pipeline(fit_data)
+
+(X_out, y_out, fit) = pipeline.execute_pipeline(pipeline_input_fit)
+
 print("\n\n output after 2nd FIT: ", X_out.shape, y_out.shape, fit)
+print("\n\n")
 
 #reactivated_pipeline = dm.Pipeline('reactivated')
 pipeline_input_predict = (X_test, y_test, ExecutionType.PREDICT)
-data_input_pred = {node_a:{0:pipeline_input_predict}}
 
 
 #reactivated_pipeline.add_edge(node_a, node_b1)
@@ -101,6 +101,6 @@ data_input_pred = {node_a:{0:pipeline_input_predict}}
 #reactivated_pipeline.add_edge(node_b1, node_c)
 #reactivated_pipeline.add_edge(node_b2, node_c)
 #reactivated_pipeline.add_edge(node_c, node_d)
-(X_out, y_out, predict) = pipeline.execute_pipeline(data_input_pred)
+(X_out, y_out, predict) = pipeline.execute_pipeline(pipeline_input_predict)
 print("\n\n output after PREDICT: ", X_out.shape, y_out.shape, predict)
 print("\n\n")

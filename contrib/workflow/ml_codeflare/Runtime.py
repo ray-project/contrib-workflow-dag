@@ -30,15 +30,15 @@ def split(cross_validator: BaseCrossValidator, X, y):
             X_train, X_test = X.iloc[train_index], X.iloc[test_index]
         else:
             X_train, X_test = X[train_index], X[test_index]
-            
+
         if isinstance(y, pd.DataFrame) or isinstance(y, pd.Series):
             y_train, y_test = y.iloc[train_index], y.iloc[test_index]
         else:
             y_train, y_test = y[train_index], y[test_index]
-            
+
         split_input.append((X_train, X_test, y_train, y_test))
     return split_input
- 
+
 def check_pipeline_is_legit(num_nodes, candidate_edges):
     assert candidate_edges is not None
     nodes = {}
@@ -56,7 +56,7 @@ def check_pipeline_is_legit(num_nodes, candidate_edges):
     return (num_nodes == len(nodes))
 
 def grid_search_cv(cv, pipeline, pipeline_input, pipeline_param):
-  
+
     # Loop through pipeline_param.get_all_params() and generate a new pipeline.
     # For each pipeline, run through with every splitted input, each with a score.
     # This implementation is needed because there is only one output from a DAG.
@@ -64,7 +64,7 @@ def grid_search_cv(cv, pipeline, pipeline_input, pipeline_param):
     # get_parameterized_pipeline and store the entire expanded DAG with multiple output
     # nodes and do a single DAG.execute() with each splitted data from
     # get_paramterized_pipeline_input
-    
+
     pipeline_params = pipeline_param.get_all_params()
     parameterized_nodes = {}
     for node_name, params in pipeline_params.items():
@@ -82,19 +82,19 @@ def grid_search_cv(cv, pipeline, pipeline_input, pipeline_param):
         new_estimator_name = node_name_part[:-3]+'__'+num
         new_v_node = dm.EstimatorNode(new_estimator_name, new_estimator).get_node()
         parameterized_nodes[node_name_part].append(new_v_node)
-        
+
     # update parameterized nodes with missing non-parameterized nodes to hold the
     # the original dag nodes
-    
+
     all_nodes = pipeline.get_dag().get_nodes()
     for node_name, node in all_nodes.items():
         # print("\n\n all nodes: ", node_name)
         if node_name not in parameterized_nodes.keys():
             parameterized_nodes[node_name] = [node]
-        
+
     # contructing a set of new edges for each original edge with parameterized_nodes
     all_old_edges = pipeline.get_dag().get_edges()
-    
+
     all_new_edges = []
     for old_edge in all_old_edges:
         from_node_name = old_edge[0].get_name()
@@ -106,16 +106,16 @@ def grid_search_cv(cv, pipeline, pipeline_input, pipeline_param):
             for expanded_to_node in expanded_to_nodes:
                 new_edges.append([expanded_from_node, expanded_to_node])
         all_new_edges.append(new_edges)
-        
+
     # constructing all potential pipeline_edges from all_new_edges
     link_level_0 = all_new_edges[0]
     pipeline_edges = [[edge] for edge in link_level_0]
     for link_level_i in all_new_edges[1:]:
         new_pipeline_edges = [edge_1.append(edge_2) for edge_1 in pipeline_edges for edge_2 in link_level_i]
         pipeline_edges = new_pipeline_edges
-    
+
     #print("\n\n total num of candidate pipelines: \n\n", len(pipeline_edges))
-    
+
     total_num_nodes = len(pipeline.get_dag().get_nodes().keys())
     i = 0
     all_pipelines = []
@@ -128,9 +128,9 @@ def grid_search_cv(cv, pipeline, pipeline_input, pipeline_param):
                 my_pipeline.add_edge(from_node, to_node)
             all_pipelines.append(my_pipeline)
         i = i+1
-    
+
     # print("\n\n total num of legit pipelines\n\n", len(all_pipelines))
-        
+
     # Now, for each pipeline in all_pipelines, feed split data and collect results
     results = []
     # split the pipeline_input based on cv
@@ -147,11 +147,9 @@ def grid_search_cv(cv, pipeline, pipeline_input, pipeline_param):
         # for each pipeline, run through cv() with split input & collect score
         for X_train, X_test, y_train, y_test in split_inputs:
             pipeline_input_fit = (X_train, y_train, ExecutionType.FIT)
-            data_input_fit = {input_node: {0:pipeline_input_fit}}
-            (X_out, y_out, e_mode) = my_pipeline.execute_pipeline(data_input_fit)
+            (X_out, y_out, e_mode) = my_pipeline.execute_pipeline(pipeline_input_fit)
             pipeline_input_score = (X_test, y_test, ExecutionType.SCORE)
-            data_input_score = {input_node: {0:pipeline_input_score}}
-            (X_junk, score, e_mode) = my_pipeline.execute_pipeline(data_input_score)
+            (X_junk, score, e_mode) = my_pipeline.execute_pipeline(pipeline_input_score)
             cv_scores.append(score)
         # grab all the estimators and append them into cv_estimators
         all_nodes = my_pipeline.get_dag().get_nodes()
@@ -164,5 +162,5 @@ def grid_search_cv(cv, pipeline, pipeline_input, pipeline_param):
                 cv_estimators[node_name[:-3]] = ray.get(estimator)
         results.append([cv_estimators, cv_scores])
         #print("\n\n finished pipeline: ", my_pipeline.get_name())
-        
+
     return results
