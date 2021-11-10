@@ -96,11 +96,13 @@ print("\n\n")
 
 serve.start()
 
-@serve.deployment
+@serve.deployment(num_replicas = 7)
 class MLPipeline:
     def __init__(self, pipeline_name):
         import nest_asyncio
         nest_asyncio.apply()
+        storage = "/tmp/ray/workflow_data/"
+        workflow.init()
         self.pipeline = Pipeline(pipeline_name)
 
     def __call__(self, pipeline_input):
