@@ -32,10 +32,12 @@ class FunctionNode(Node):
     def __init__(self,
                  func: Union[Callable, WorkflowStepFunction],
                  name=None,
+                 vaname=None,
                  step_options=None):
         if step_options is not None and not isinstance(step_options, dict):
             raise ValueError("step_options must be a dict.")
 
+        self._vaname = vaname
         self._func = func
         self._step_options = step_options or {}
 
@@ -50,11 +52,15 @@ class FunctionNode(Node):
     def get_name(self):
         return self._name
 
+    def get_vaname(self):
+        return self._vaname
+
     def execute(self, *args, **kwargs):
         return self._step_func.step(*args, **kwargs)
 
     def options(self,
                 name=None,
+                vaname=None,
                 step_options=None
                 ):
         """This function set how the step function is going to be executed.
@@ -67,7 +73,7 @@ class FunctionNode(Node):
         Returns:
             The node itself.
         """
-        return FunctionNode(self._func, name, step_options)
+        return FunctionNode(self._func, name, vaname, step_options)
 
     def __call__(self, *args, **kwargs):
         raise TypeError("Workflow nodes cannot be called directly")

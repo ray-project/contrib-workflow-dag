@@ -24,7 +24,9 @@ def node(*args, **kwargs):
     name = kwargs.pop("name", None)
     if name is not None:
         node_options["name"] = name
+    vaname = kwargs.pop("vaname", None)
+    if vaname is not None:
+        node_options["vaname"] = vaname
     if len(kwargs) != 0:
         node_options["step_options"] = kwargs
     return make_node_decorator(node_options)
-
