@@ -141,6 +141,7 @@ class Pipeline:
             self.__id = id
             try:
                 existing = workflow.get_actor(self.__id)
+                ray.get(existing.ready())
             except:
                 existing = None
             if existing is None:
