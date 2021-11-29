@@ -99,6 +99,8 @@ spec:
                   resource: requests.cpu
             - name: PYTHONPATH
               value: "/home/ray/"
+            - name: RAY_WORKFLOW_STORAGE
+              value: "Link to S3 bucket"
           resources:
             requests:
               cpu: 2
@@ -161,6 +163,8 @@ spec:
             valueFrom:
               resourceFieldRef:
                 resource: requests.cpu
+          - name: RAY_WORKFLOW_STORAGE
+            value: "Link to S3 bucket"
         resources:
           requests:
             cpu: 2
