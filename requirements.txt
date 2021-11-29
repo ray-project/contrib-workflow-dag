@@ -7,6 +7,8 @@ pandas~=0.25.3
 numpy~=1.19.2
 torch~=1.6.0
 fastapi~=0.66.0
+uvicorn~=0.14.0
+requests
 pickle5
 
 # S3
