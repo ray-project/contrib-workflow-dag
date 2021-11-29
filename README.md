@@ -2,23 +2,53 @@
 
 ## Overview
 
-This repo provides a DAG layer implementation for running Ray workflows.
+This repo provides a **Graph** layer implementation and semantic enrichment for creating and running Ray workflows.
 
-DAG layer provides a higher level abstraction on top of workflow steps,
-aiming to provide convenience on workflow construction.
+Graph (i.e. DAG) layer provides a higher level abstraction on top of workflow steps,
+aiming to make workflow construction more convenient and intuitive. It also exposes semantic information such as the
+type of execution, level of parallelism, and state of application.
 
-## Comparison
+## Graph vs. Workflow Step
 
-**_TODO: This is placeholder for putting a comparison between
-using workflow step function vs. workflow graph.   
-Discuss with Yi/Zhe/Alex to find a few good examples
-for comparison._**   
-e.g. 
-For sequential, we have `c.step(b.step(a.step())).run` vs 
-`DAG.sequential([a, b, c]).execute()`.
+Workflows provide the building blocks for repeatable execution of "steps" in Ray. However, as we chain multiple steps and evolve the workflow graph, it can
+quickly become a challenge to maintain and modify this graph. DAG APIs enable the end user to abstract the underlying step graph by providing simple APIs for constructing workflows.
 
-Try also to find a multi-branch graph that could benefit from the convenience
-of DAG where workflow.step can be very nested and hard-to-read.
+Followings are two examples of graph construction.
+
+### sequential workflow
+![sequential-dag](source/images/sequential-dag.png)
+- Workflow step
+```python
+e.step(d.step(c.step(b.step(a.step()))))
+```
+- DAG: 
+```python
+DAG.sequential([a, b, c, d, e])
+```
+
+### a more complex workflow
+![non-linear-dag](source/images/non-linear.png)
+- Workflow step:
+```python
+g.step(
+    f.step(
+        e.step(
+            a.step(), b.step()
+        ), 
+        c.step()), 
+    d.step()
+)
+```
+- DAG: 
+```python
+dag = DAG()
+dag.add_edge(a, e, 0)
+dag.add_edge(b, e, 1)
+dag.add_edge(e, f, 0)
+dag.add_edge(c, f, 1)
+dag.add_edge(f, g, 0)
+dag.add_edge(d, g, 1)
+```
 
 ## Design
 A ***DAG*** contains a set of _**connected Nodes**_.
@@ -30,7 +60,7 @@ A DAG/Graph is typically constructed by
 `dag.add_edge(A, B, 0)` means adding "Node A -> Node B" to the graph 
 while Node A's output will become the input value for first positional argument of Node B.
 `in_arg_mapping` can be either positional (int) or kwargs (str).
-See [examples](https://github.com/ray-project/contrib-workflow-dag/blob/main/contrib/workflow/examples/simple_dag_example.py#L47)
+See [examples](https://github.com/ray-project/contrib-workflow-dag/blob/main/contrib/workflow/graph/examples/simple_dag_example.py#L34)
 for better understanding.
 
 DAG can be executed by running `dag.execute()`, optionally with a target
@@ -38,8 +68,8 @@ node: `dag.execute(node)` which will execute a sub-graph that runs until
 the given node.  
 
 ## Quick Start
-![dag-example](source/images/dag-example.png)
-Run above workflow using graph APIs:
+![dag-example](source/images/sample-dag.png)
+
 ```python
 @graph.node
 def minus(left: int, right: int) -> int:
