@@ -9,6 +9,7 @@ torch~=1.6.0
 fastapi~=0.66.0
 uvicorn~=0.14.0
 requests
+nest-asyncio
 pickle5
 
 # S3
