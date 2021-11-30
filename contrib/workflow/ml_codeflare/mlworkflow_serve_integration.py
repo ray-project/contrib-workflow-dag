@@ -114,6 +114,7 @@ class WorkflowRouterDirector:
     def __call__(self, *args):
         session_id = args[0][0]
         input = args[0][1:]
+        print(f"\n{session_id}: is routed to replica: {serve.get_replica_context().replica_tag}\n")
         if session_id not in self.currentSessions.keys():
             confirmsessionexist = True
             try:
@@ -124,7 +125,7 @@ class WorkflowRouterDirector:
                 self.currentSessions[session_id] = cloned_ml_pipeline
             except ray.workflow.storage.base.KeyNotFoundError:
                 confirmsessionexist = False
-                print(session_id, 'NOT FOUND')
+                print(f"\n\n{session_id}, NOT FOUND\n\n")
             if confirmsessionexist is False:
                 newpipeline = self.clone_pipeline(self.pipeline_name, session_id)
                 self.currentSessions[session_id] = newpipeline
@@ -146,10 +147,10 @@ def workflowrouter(obj):
 @workflowrouter
 class MLPipeline:
     def __init__(self, pipeline_name):
-        import nest_asyncio
-        nest_asyncio.apply()
-        localstorage = "/tmp/ray/workflow_data/"
-        workflow.init(localstorage)
+        # import nest_asyncio
+        # nest_asyncio.apply()
+        # localstorage = "/tmp/ray/workflow_data/"
+        # workflow.init(localstorage)
         self.pipeline_name = pipeline_name
 
     def set_pipeline(self, pipeline_name, pipeline):
@@ -170,8 +171,8 @@ class MLPipeline:
         return self.pipeline_name
 
 mldeployment = MLPipeline('base_pipeline')
-for p in ['session_id_1','session_id_2','session_id_3','session_id_1','session_id_2','session_id_3',
-    'session_id_1','session_id_2','session_id_3']:
+for p in ['session_id_1','session_id_2','session_id_3','session_id_4','session_id_1','session_id_2','session_id_3',
+    'session_id_4','session_id_1','session_id_2','session_id_3','session_id_4']:
     id_plus_data = (p, X_test, y_test, ExecutionType.PREDICT)
     (X_out, y_out, predict) = ray.get(mldeployment.remote(id_plus_data))
     print('----------------', p, X_out.shape, y_out.shape,'----------------')
