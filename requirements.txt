@@ -11,6 +11,14 @@ requests
 nest-asyncio
 pickle5
 
+# dashboard
+opencensus
+prometheus_client
+aiohttp
+aiosignal
+aiohttp_cors
+frozenlist
+
 # S3
 aioboto3~=9.2.2
 aiobotocore~=1.4.2
