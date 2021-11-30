@@ -11,3 +11,6 @@ RUN pip install -e .
 
 COPY setup.py requirements.txt /home/ray/
 COPY contrib /home/ray/contrib/
+
+USER ray
+
