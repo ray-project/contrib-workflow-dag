@@ -41,9 +41,9 @@ def feature_union(*inputtuple):
     X_concat = np.concatenate(X_list, axis=1)
     return (X_concat, y, flag)
 
-localstorage = "/tmp/ray/workflow_data/"
-shutil.rmtree(localstorage, ignore_errors=True)
-workflow.init(localstorage)
+#localstorage = "/tmp/ray/workflow_data/"
+#shutil.rmtree(localstorage, ignore_errors=True)
+workflow.init()
 
 ## prepare the data
 X = pd.DataFrame(np.random.randint(0,100,size=(10000, 4)), columns=list('ABCD'))
@@ -78,8 +78,7 @@ class WorkflowRouterDirector:
     def __init__(self, *args):
         import nest_asyncio
         nest_asyncio.apply()
-        localstorage = "/tmp/ray/workflow_data/"
-        workflow.init(localstorage)
+        workflow.init()
 
         self.currentSessions = dict()
         self.template = args[0]
