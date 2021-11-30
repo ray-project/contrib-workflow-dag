@@ -9,7 +9,7 @@ fastapi~=0.66.0
 uvicorn~=0.14.0
 requests
 nest-asyncio
-cloudpickle
+cloudpickle~=1.6.0
 pickle5
 
 # dashboard
