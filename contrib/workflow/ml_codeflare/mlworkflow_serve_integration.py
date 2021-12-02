@@ -41,8 +41,7 @@ def feature_union(*inputtuple):
     X_concat = np.concatenate(X_list, axis=1)
     return (X_concat, y, flag)
 
-#localstorage = "/tmp/ray/workflow_data/"
-#shutil.rmtree(localstorage, ignore_errors=True)
+ray.init(address="auto", namespace="serve")
 workflow.init()
 
 ## prepare the data
@@ -60,6 +59,11 @@ preprocessor = ColumnTransformer(
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
+try:
+    workflow.delete('base_pipeline')
+except ray.workflow.common.WorkflowNotFoundError:
+    pass
+
 pipeline = dm.Pipeline('base_pipeline')
 #pipeline = dm.Pipeline('fit_'+datetime.now().strftime("%Y-%m-%d_%H:%M"))
 node_a = dm.EstimatorNode('preprocess', preprocessor).get_node()
@@ -73,7 +77,7 @@ print("--------------------- Done training a pipeline ----------------------- ",
 print("--------------------- Deploy Serve endpoints ----------------------- ")
 
 serve.start()
-@serve.deployment(num_replicas = 3)
+@serve.deployment(num_replicas = 4, ray_actor_options={"num_cpus": 4})
 class WorkflowRouterDirector:
     def __init__(self, *args):
         import nest_asyncio
