@@ -77,7 +77,7 @@ print("--------------------- Done training a pipeline ----------------------- ",
 print("--------------------- Deploy Serve endpoints ----------------------- ")
 
 serve.start()
-@serve.deployment(num_replicas = 4, ray_actor_options={"num_cpus": 4})
+@serve.deployment(num_replicas = 3, ray_actor_options={"num_cpus": 4})
 class WorkflowRouterDirector:
     def __init__(self, *args):
         import nest_asyncio
@@ -119,6 +119,7 @@ class WorkflowRouterDirector:
         input = args[0][1:]
         print(f"\n{session_id}: is routed to replica: {serve.get_replica_context().replica_tag}\n")
         if session_id not in self.currentSessions.keys():
+            print(f"\n\n{session_id}, NOT FOUND within currentSessions\n\n")
             confirmsessionexist = True
             try:
                 known_session = workflow.get_actor(session_id)
