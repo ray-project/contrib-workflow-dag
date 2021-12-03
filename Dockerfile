@@ -1,6 +1,8 @@
 ARG base_image=rayproject/ray:latest
 FROM ${base_image}
 
+RUN sed -in 's:LOGGER_LEVEL = "info":LOGGER_LEVEL = "warning":g' /home/ray/anaconda3/lib/python3.7/site-packages/ray/ray_constants.py
+
 COPY setup.py requirements.txt ./ 
 COPY contrib ./contrib/
 
@@ -11,6 +13,7 @@ RUN pip install -e .
 
 COPY setup.py requirements.txt /home/ray/
 COPY contrib /home/ray/contrib/
+RUN chown -R ray:ray /home/ray/
 
 USER ray
 
