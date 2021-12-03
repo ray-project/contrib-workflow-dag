@@ -13,7 +13,7 @@ RUN pip install -e .
 
 COPY setup.py requirements.txt /home/ray/
 COPY contrib /home/ray/contrib/
-RUN chown -R ray:ray /home/ray/
+RUN chown -R ray:users /home/ray/
 
 USER ray
 
