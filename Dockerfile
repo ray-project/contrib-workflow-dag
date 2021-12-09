@@ -1,4 +1,4 @@
-ARG base_image=rayproject/ray:latest
+ARG base_image=rayproject/ray:1.8.0
 FROM ${base_image}
 
 #RUN sed -in 's:LOGGER_LEVEL = "info":LOGGER_LEVEL = "warning":g' /home/ray/anaconda3/lib/python3.7/site-packages/ray/ray_constants.py
