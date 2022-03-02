@@ -1,5 +1,5 @@
 from typing import Union
-
+import ray
 from ray.util.annotations import PublicAPI
 
 from contrib.workflow.graph.node import Node
@@ -10,7 +10,7 @@ class DAG:
     """DAG class.
     """
     def __init__(self):
-        self._nodes = {}
+        self._nodes = []
         self._edges = []
         self._upstreams = {}
         self._downstreams = {}
@@ -27,7 +27,7 @@ class DAG:
         self._node_levels = {}
         self._level_nodes = {}
 
-    def execute(self, data=None, node=None):
+    def execute(self, data=None, node=None, wait=False):
         """Execute the graph, optionally on a target node.
 
         Data is passed to the graph with "data" argument in the form of
@@ -77,20 +77,24 @@ class DAG:
         Returns:
 
         """
-        return self._execute(data, node)
+        if not node:
+            output_nodes = self.get_output_nodes()
+            if len(output_nodes) == 1:
+                node = output_nodes[0]
+            else:
+                raise ValueError("There are more than 1 output nodes in this DAG, "
+                                 "please specify the node you want to execute.")
+        return self._execute(data, node, wait)
 
-    def _execute(self, data=None, node=None):
+    def _execute(self, data, node, wait):
         data = data or {}
-
+        to_run_nodes = self.get_ancestors(node, True)
         nodes_by_level = self.get_nodes_by_level()
-        final = None
         for level in nodes_by_level:
             for _node in nodes_by_level[level]:
-                final = self._execute_node(_node, data.get(_node, {}))
-        if node is not None:
-            return self._node_output[node].run()
-        else:
-            return final.run()
+                if _node in to_run_nodes:
+                    self._execute_node(_node, data.get(_node, {}))
+        return ray.get(self._node_output[node]) if wait else self._node_output[node]
 
     def _execute_node(self, node: Node, arg_vals=None):
         """
@@ -108,7 +112,7 @@ class DAG:
         args_pos_and_val = []
         kwargs = {}
         # Get input from upstream nodes
-        for pre_node in self.get_pre_nodes(node):
+        for pre_node in self.get_upstreams(node):
             mapping = self._node_in_args[node][pre_node]
             value = self._node_output[pre_node]
             if isinstance(mapping, int):
@@ -139,7 +143,11 @@ class DAG:
         if node not in self._downstreams:
             self._downstreams[node] = []
         if node not in self._nodes:
-            self._nodes[node.get_name()] = node
+            self._nodes.append(node)
+
+    def add_nodes(self, nodes):
+        for node in nodes:
+            self.add_node(node)
 
     def _add_node_in_args(self, from_node, to_node, arg):
         if to_node not in self._node_in_args:
@@ -222,6 +230,10 @@ class DAG:
 
         self._add_node_in_args(from_node, to_node, arg_mapping)
 
+    def add_edges(self, edges):
+        for edge in edges:
+            self.add_edge(*edge)
+
     def get_edges(self):
         return self._edges
 
@@ -254,97 +266,102 @@ class DAG:
     #         except ImportError:
     #             pass
 
-    def _compute_node_level(self, node: Node, result: dict):
-        if node in result:
-            return result[node]
+    def get_ancestors(self, node, including_self=False):
+        def dfs(_node, _res):
+            if _node not in _res:
+                _res.append(_node)
+                for _upstream in self._upstreams[node]:
+                    dfs(_upstream, _res)
+        res = []
+        dfs(node, res)
+        if not including_self:
+            res.remove(node)
+        return res
 
-        pre_nodes = self.get_pre_nodes(node)
-        if not pre_nodes:
-            result[node] = 0
+    def get_descendants(self, node, including_self=False):
+        def dfs(_node, _res):
+            if _node not in _res:
+                _res.append(_node)
+                for _downstream in self._downstreams[node]:
+                    dfs(_downstream, _res)
+        res = []
+        dfs(node, res)
+        if not including_self:
+            res.remove(node)
+        return res
+
+    def _dfs(self, node, res):
+        if node in res:
+            return res[node]
+        if not self._upstreams[node]:
+            res[node] = 0
             return 0
+        res[node] = max(self._dfs(_node, res) for _node in self._upstreams[node]) + 1
+        return res[node]
 
-        max_level = 0
-        for p_node in pre_nodes:
-            level = self._compute_node_level(p_node, result)
-            max_level = max(level, max_level)
-
-        result[node] = max_level + 1
-
-        return max_level + 1
-
-    def _compute_node_levels(self):
+    def _populate_node_levels(self):
         if self._node_levels:
-            return self._node_levels
-
+            return
+        res = {}
         for node in self._upstreams:
-            self._node_levels[node] = self._compute_node_level(node, self._node_levels)
-
-        return self._node_levels
+            self._dfs(node, res)
+        self._node_levels = res
 
     def get_node_levels(self):
-        self._compute_node_levels()
+        self._populate_node_levels()
         return self._node_levels
 
     def get_node_level(self, node: Node):
-        self._compute_node_levels()
-        return self._node_levels[node]
+        return self.get_node_levels()[node]
 
     def get_max_level(self):
-        levels = self._compute_node_levels()
-        max_level = 0
-        for node, node_level in levels.items():
-            max_level = max(node_level, max_level)
-        return max_level
+        levels = self.get_node_levels().values()
+        return max(levels) if levels else 0
+
+    def _populate_nodes_by_level(self):
+        if self._level_nodes:
+            return
+        res = {}
+        for node, level in self.get_node_levels().items():
+            if level not in res:
+                res[level] = []
+            res[level].append(node)
+        self._level_nodes = res
 
     def get_nodes_by_level(self):
-        if self._level_nodes:
-            return self._level_nodes
-
-        levels = self._compute_node_levels()
-        for node, node_level in levels.items():
-            if node_level not in self._level_nodes:
-                self._level_nodes[node_level] = []
-            self._level_nodes[node_level].append(node)
-
+        self._populate_nodes_by_level()
         return self._level_nodes
 
-    def get_post_nodes(self, node: Node):
-        """Get all nodes that flows out from the target node, i.e. downstream nodes"""
+    def get_downstreams(self, node: Node):
         return self._downstreams[node]
 
-    def get_pre_nodes(self, node: Node):
-        """Get all nodes that flows into the target node, i.e. upstream dependencies"""
+    def get_upstreams(self, node: Node):
         return self._upstreams[node]
 
     def is_output(self, node: Node):
-        post_nodes = self.get_post_nodes(node)
-        return not post_nodes
+        downstreams = self.get_downstreams(node)
+        return not downstreams
 
     def get_output_nodes(self):
-        # dict from level to nodes
-        terminal_nodes = []
-        for node in self._upstreams.keys():
+        output_nodes = []
+        for node in self._nodes:
             if self.is_output(node):
-                terminal_nodes.append(node)
-        return terminal_nodes
+                output_nodes.append(node)
+        return output_nodes
 
     def get_nodes(self):
         return self._nodes
 
     def is_input(self, node: Node):
-        pre_nodes = self.get_pre_nodes(node)
-        return not pre_nodes
+        upstreams = self.get_upstreams(node)
+        return not upstreams
 
     def get_input_nodes(self):
         input_nodes = []
-        for node in self._nodes.values():
-            if self.get_node_level(node) == 0:
+        for node in self._nodes:
+            if self.is_input(node):
                 input_nodes.append(node)
-
         return input_nodes
-
-    def get_node(self, node_name: str) -> Node:
-        return self._nodes[node_name]
 
     def get_node_output(self, node: Node):
         return self._node_output[node]

@@ -24,7 +24,10 @@ def node(*args, **kwargs):
     name = kwargs.pop("name", None)
     if name is not None:
         node_options["name"] = name
+    checkpoint = kwargs.pop("checkpoint", None)
+    if checkpoint is not None:
+        node_options["checkpoint"] = False
     if len(kwargs) != 0:
-        node_options["step_options"] = kwargs
+        node_options["ray_options"] = kwargs
     return make_node_decorator(node_options)
 
