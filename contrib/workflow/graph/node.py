@@ -44,8 +44,8 @@ class FunctionNode(Node):
             self._name = name or self._step_func.step.__name__
 
         else:
-            self._step_func = WorkflowStepFunction(self._func, **self._step_options)
-            self._name = name or get_module(func) + "." + get_qualname(func)
+            self._step_func = WorkflowStepFunction(self._func).options(**self._step_options)
+            self._name = name or get_qualname(func)
 
     def get_name(self):
         return self._name
@@ -55,7 +55,7 @@ class FunctionNode(Node):
 
     def options(self,
                 name=None,
-                step_options=None
+                **step_options
                 ):
         """This function set how the step function is going to be executed.
 
@@ -71,3 +71,6 @@ class FunctionNode(Node):
 
     def __call__(self, *args, **kwargs):
         raise TypeError("Workflow nodes cannot be called directly")
+
+    def __repr__(self):
+        return "Node: {}, Options: {}".format(self._name, self._step_options)
